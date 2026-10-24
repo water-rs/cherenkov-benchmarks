@@ -13,7 +13,7 @@ spec.loader.exec_module(archive)
 class ArchiveTests(unittest.TestCase):
     def setUp(self):
         self.metadata = {"recorded_at": "2026-01-01T01:00:00+00:00",
-                         "device": {"model": "Pixel 9 Pro", "model_identifier": "caiman"},
+                         "device": {"model": "Pixel 9 Pro", "model_identifier": "caiman", "os": "Android 16", "gpu": "Mali-G715"},
                          "source": {"revision": "a" * 40}, "valid": True,
                          "configuration": {"mode": "fixed-clocks"}}
         self.report = {"engine": "cherenkov", "scene": "list", "width": 10, "height": 20,
@@ -43,7 +43,7 @@ class ArchiveTests(unittest.TestCase):
             root = Path(directory)
             archive.archive(root, self.report, self.metadata)
             other = copy.deepcopy(self.metadata)
-            other["device"] = {"model": "iPad Pro M4", "model_identifier": "iPad16,5"}
+            other["device"] = {"model": "iPad Pro M4", "model_identifier": "iPad16,5", "os": "iPadOS 26.5", "gpu": "Apple M4"}
             _, yearly = archive.archive(root, self.report, other)
             rows = [json.loads(line) for line in (root / yearly).read_text().splitlines()]
             self.assertNotEqual(rows[0]["comparison_key"], rows[1]["comparison_key"])

@@ -48,19 +48,24 @@ def summarize(report, valid):
             "memory": report.get("memory")}
 
 
-def archive(root, report, metadata):
-    """Write one immutable raw JSON and one idempotent yearly JSONL record."""
-    timestamp = dt.datetime.fromisoformat(metadata["recorded_at"])
-    if timestamp.tzinfo is None:
-        raise ValueError("recorded_at must carry a timezone")
-    timestamp = timestamp.astimezone(ZoneInfo("America/New_York"))
+def validate_identity(metadata):
     device = metadata["device"]
-    for key in ("model", "model_identifier"):
+    for key in ("model", "model_identifier", "os", "gpu"):
         if not isinstance(device[key], str) or not device[key].strip():
             raise ValueError(f"device.{key} is required")
     revision = metadata["source"]["revision"]
     if re.fullmatch(r"[0-9a-f]{40}", revision) is None:
         raise ValueError("source.revision must be a full commit hash")
+
+
+def archive(root, report, metadata):
+    """Write one immutable raw JSON and one idempotent yearly JSONL record."""
+    validate_identity(metadata)
+    timestamp = dt.datetime.fromisoformat(metadata["recorded_at"])
+    if timestamp.tzinfo is None:
+        raise ValueError("recorded_at must carry a timezone")
+    timestamp = timestamp.astimezone(ZoneInfo("America/New_York"))
+    device = metadata["device"]
     if not isinstance(metadata["valid"], bool):
         raise ValueError("valid must be a boolean")
     metadata = dict(metadata, recorded_at=timestamp.isoformat())
@@ -68,7 +73,9 @@ def archive(root, report, metadata):
     configuration = metadata["configuration"]
     comparison = {"device": device, "engine": report["engine"],
                   "scene": report["scene"], "width": report["width"],
-                  "height": report["height"], "configuration": configuration}
+                  "height": report["height"], "configuration": configuration,
+                  "adapter": {key: value for key, value in report.get("device", {}).items()
+                              if key in ("adapter", "backend", "driver", "driver_info", "target_format", "cpu")}}
     raw = {"schema_version": 1, "metadata": metadata, "report": report}
     run_id = hashlib.sha256(encoded(raw).encode()).hexdigest()
     model = re.sub(r"[^a-z0-9]+", "-", device["model_identifier"].lower()).strip("-")
