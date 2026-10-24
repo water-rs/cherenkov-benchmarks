@@ -48,6 +48,24 @@ class ArchiveTests(unittest.TestCase):
             rows = [json.loads(line) for line in (root / yearly).read_text().splitlines()]
             self.assertNotEqual(rows[0]["comparison_key"], rows[1]["comparison_key"])
 
+    def test_model_identifier_and_os_distinguish_comparisons(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            metadata = copy.deepcopy(self.metadata)
+            metadata["device"] = {"model": "iPad Pro", "model_identifier": "iPad16,5",
+                                  "os": "iPadOS 26.5", "gpu": "Apple M4"}
+            first_raw, yearly = archive.archive(root, self.report, metadata)
+            other_model = copy.deepcopy(metadata)
+            other_model["device"]["model_identifier"] = "iPad16,6"
+            other_raw, _ = archive.archive(root, self.report, other_model)
+            other_os = copy.deepcopy(metadata)
+            other_os["device"]["os"] = "iPadOS 26.6"
+            archive.archive(root, self.report, other_os)
+            rows = [json.loads(line) for line in (root / yearly).read_text().splitlines()]
+            self.assertEqual(len({row["comparison_key"] for row in rows}), 3)
+            self.assertTrue(first_raw.name.startswith("ipad16-5-"))
+            self.assertTrue(other_raw.name.startswith("ipad16-6-"))
+
     def test_invalid_runs_are_retained_without_performance_statistics(self):
         with tempfile.TemporaryDirectory() as directory:
             metadata = dict(self.metadata, valid=False)
