@@ -98,6 +98,7 @@ def run_one_launch(run_id: str, args_list: list[list[str]], dest_dir: pathlib.Pa
 def main():
     parser = runner_arguments("Run and automatically archive iPad hardware benchmarks")
     parser.add_argument("--mode", choices=("all", "gpu", "cpu"), default="all")
+    parser.add_argument("--scenes", nargs="+", choices=SCENES + ["ui-list-scroll"], default=SCENES)
     options = parser.parse_args()
     metadata = json.loads(options.metadata.read_text())
     with tempfile.TemporaryDirectory() as directory:
@@ -127,7 +128,7 @@ def measure(options, journal):
         print("=== Running GPU Native (2752x2064 @ 120Hz, 3 interleaved rounds) ===", flush=True)
         for round_idx in range(3):
             engines = GPU_ENGINES if round_idx % 2 == 0 else list(reversed(GPU_ENGINES))
-            for scene in SCENES:
+            for scene in options.scenes:
                 for engine in engines:
                     run_id = f"gpu-r{round_idx}-{scene}-{engine}"
                     dest_dir = out_root / "gpu" / f"r{round_idx}" / f"{scene}-{engine}"
@@ -138,6 +139,7 @@ def measure(options, journal):
                         "--native", "2752x2064",
                         "--rate", "120",
                         "--energy",
+                        "--wait-for-completion",
                         "--warmup", "30",
                         "--frames", "120",
                         "--out", "Documents/out/measure.json",
@@ -148,7 +150,7 @@ def measure(options, journal):
         print("=== Running CPU (scene resolution, 3 interleaved rounds) ===", flush=True)
         for round_idx in range(3):
             engines = CPU_ENGINES if round_idx % 2 == 0 else list(reversed(CPU_ENGINES))
-            for scene in SCENES:
+            for scene in options.scenes:
                 for engine in engines:
                     run_id = f"cpu-r{round_idx}-{scene}-{engine}"
                     dest_dir = out_root / "cpu" / f"r{round_idx}" / f"{scene}-{engine}"
@@ -159,6 +161,7 @@ def measure(options, journal):
                         "--engine", engine,
                         "--scene", f"Documents/scenes/perf/{scene}",
                         "--energy",
+                        "--wait-for-completion",
                         "--warmup", warmup,
                         "--frames", frames,
                         "--out", "Documents/out/measure.json",
