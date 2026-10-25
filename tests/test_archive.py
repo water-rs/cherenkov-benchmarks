@@ -17,15 +17,44 @@ class ArchiveTests(unittest.TestCase):
                          "source": {"revision": "a" * 40}, "valid": True,
                          "configuration": {"mode": "fixed-clocks"}}
         self.report = {"engine": "cherenkov", "scene": "list", "width": 10, "height": 20,
-                       "samples": [{"encode_seconds": .001, "submit_seconds": .009, "gpu_seconds": .002},
-                                   {"encode_seconds": .009, "submit_seconds": .001, "gpu_seconds": .012}]}
+                       "samples": [{"encode_seconds": .001, "submit_seconds": .009, "gpu_seconds": .002, "latency_seconds": .015},
+                                   {"encode_seconds": .009, "submit_seconds": .001, "gpu_seconds": .012, "latency_seconds": .020}]}
 
-    def test_frame_statistics_use_paired_samples(self):
+    def test_latency_statistics_use_measured_completion(self):
         stats = archive.summarize(self.report, True)
         for metric, expected in {"cpu": {"p50": 10, "p99": 10},
-                                 "frame": {"p50": 10, "p99": 12}}.items():
+                                 "latency": {"p50": 15, "p99": 20}}.items():
             for quantile, value in expected.items():
                 self.assertAlmostEqual(stats["timing_ms"][metric][quantile], value)
+
+    def test_missing_latency_is_not_inferred_from_cpu_or_gpu(self):
+        for sample in self.report["samples"]:
+            sample.pop("latency_seconds")
+            sample["gpu_seconds"] = None
+        self.report["gpu_timing_unavailable"] = "No render-pass timestamps"
+        stats = archive.summarize(self.report, True)
+        self.assertIsNone(stats["timing_ms"]["latency"])
+        self.assertIsNone(stats["timing_ms"]["gpu"])
+        self.assertEqual(stats["gpu_timing_unavailable"], "No render-pass timestamps")
+        self.assertIsNotNone(stats["timing_ms"]["cpu"])
+
+    def test_partial_latency_cannot_hide_missing_frames(self):
+        self.report["samples"][1].pop("latency_seconds")
+        with self.assertRaises(ValueError):
+            archive.summarize(self.report, True)
+
+    def test_completion_modes_are_distinct_comparison_groups(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.report["wait_for_completion"] = True
+            _, yearly = archive.archive(root, self.report, self.metadata)
+            other = copy.deepcopy(self.report)
+            other["wait_for_completion"] = False
+            for sample in other["samples"]:
+                sample["latency_seconds"] = None
+            archive.archive(root, other, self.metadata)
+            rows = [json.loads(line) for line in (root / yearly).read_text().splitlines()]
+            self.assertNotEqual(rows[0]["comparison_key"], rows[1]["comparison_key"])
 
     def test_archive_is_idempotent_and_uses_eastern_calendar(self):
         with tempfile.TemporaryDirectory() as directory:

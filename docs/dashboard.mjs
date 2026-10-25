@@ -122,7 +122,7 @@ async function main() {
     return [id, `${d.model} · ${id}`];
   }));
   switches('historyMetric', metrics.map(m => [m.id, m.label]), renderHistory,
-    ['frame-p50','frame-p99','gpu-p50','cpu-p50','process','gpu-energy','process-energy']);
+    ['latency-p50','latency-p99','gpu-p50','cpu-p50','process','gpu-energy','process-energy']);
 
   function deviceRows() { return history.filter(r => r.device.model_identifier === $('historyDevice').value); }
   const conditionSelection = new Map();
@@ -210,9 +210,9 @@ async function main() {
 
   switches('snapshotBackend', [['gpu','GPU'],['cpu','CPU']], selectSnapshotScene);
   switches('snapshotMetric', [
-    ['frame_p50_ms','Frame p50'], ['frame_p99_ms','Frame p99'], ['gpu_p50_ms','GPU p50'],
+    ['cpu_p50_ms','CPU p50'], ['latency_p50_ms','Latency p50'], ['latency_p99_ms','Latency p99'], ['gpu_p50_ms','GPU p50'],
     ['energy_mj','Energy'], ['process_mem_mib','Process memory'], ['driver_gpu_mem_mib','Driver GPU memory'],
-  ], renderSnapshot, ['frame_p50_ms','frame_p99_ms','gpu_p50_ms','energy_mj','process_mem_mib']);
+  ], renderSnapshot, ['cpu_p50_ms','latency_p50_ms','latency_p99_ms','gpu_p50_ms','energy_mj','process_mem_mib']);
   options('snapshotRun',data.runs.map((r,i) => [String(i),r.provenance.run_id]));
   $('snapshotRun').value = String(data.runs.length-1);
   function selectSnapshotDevice() {
@@ -243,7 +243,9 @@ async function main() {
     for (const [engine,r] of entries) {
       const tr = document.createElement('tr'), name = document.createElement('span'), dot = document.createElement('span');
       dot.className = 'engine-dot'; dot.style.backgroundColor = colors[engine] ?? '#777'; name.append(dot,engine); cell(tr,name);
-      for (const key of ['frame_p50_ms','frame_p99_ms','gpu_p50_ms','gpu_p99_ms','cpu_p50_ms','energy_mj','process_mem_mib','driver_gpu_mem_mib']) cell(tr,number(r[key]));
+      for (const key of ['latency_p50_ms','latency_p99_ms','gpu_p50_ms','gpu_p99_ms','cpu_p50_ms','energy_mj','process_mem_mib','driver_gpu_mem_mib']) {
+        cell(tr, key.startsWith('gpu_p') && !finite(r[key]) ? (r.gpu_timing_unavailable ?? 'Unavailable') : number(r[key]));
+      }
       part('snapshotRows').append(tr);
     }
     });
