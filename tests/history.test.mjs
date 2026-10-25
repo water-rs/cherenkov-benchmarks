@@ -1,7 +1,7 @@
 import {test, expect} from 'bun:test';
-import {commitPoints, metrics, validHistory, change} from '../docs/history.mjs';
+import {commitPoints, metrics, cherenkovHistory, change} from '../docs/history.mjs';
 
-const row = (revision, value, time, valid = true) => ({kind: 'run', metadata: {
+const row = (revision, value, time, valid = true) => ({kind: 'run', engine: 'cherenkov', metadata: {
   valid, recorded_at: time, source: {revision}}, statistics: {timing_ms: {frame: {p50: value}}}});
 
 test('commit history aggregates independent runs, not pooled frames or rounded values', () => {
@@ -17,7 +17,7 @@ test('commit history aggregates independent runs, not pooled frames or rounded v
 });
 
 test('missing measurements stay missing and failed runs are excluded', () => {
-  const points = commitPoints(validHistory([
+  const points = commitPoints(cherenkovHistory([
     row('base', null, '2026-10-24T10:00:00-04:00'),
     row('head', 0, '2026-10-24T11:00:00-04:00'),
     row('failed', 100, '2026-10-24T12:00:00-04:00', false),
@@ -38,4 +38,11 @@ test('GPU rail energy and process-attributed energy remain different metrics', (
   expect(metrics.find(m => m.id === 'gpu-energy').value(r)).toBe(2);
   expect(metrics.find(m => m.id === 'process-energy').value(r)).toBe(1);
   expect(metrics.find(m => m.id === 'gpu-energy').value({statistics: {}})).toBeNull();
+});
+
+test('performance history includes only Cherenkov backends', () => {
+  const measurement = row('head', 2, '2026-10-24T10:00:00-04:00');
+  const engines = ['cherenkov', 'cherenkov-cpu', 'skia-metal', 'skia-cpu', 'vello-classic', 'vello-hybrid', 'vello-cpu'];
+  expect(cherenkovHistory(engines.map(engine => ({...measurement, engine}))).map(r => r.engine))
+    .toEqual(['cherenkov', 'cherenkov-cpu']);
 });

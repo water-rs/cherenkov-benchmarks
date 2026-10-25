@@ -1,4 +1,4 @@
-import {metrics, validHistory, commitPoints, change, finite} from './history.mjs';
+import {metrics, cherenkovHistory, commitPoints, change, finite} from './history.mjs';
 
 const $ = id => document.getElementById(id);
 const colors = {'cherenkov':'#438b5c','cherenkov-cpu':'#438b5c','skia-metal':'#bb713b','skia-vulkan':'#bb713b','skia-cpu':'#bb713b','vello-classic':'#477bd0','vello-hybrid':'#8362b7','vello-cpu':'#477bd0'};
@@ -54,7 +54,7 @@ async function main() {
   const response = await fetch('./data.json');
   if (!response.ok) throw new Error(`Measurements could not be loaded (${response.status}).`);
   const data = await response.json();
-  const history = validHistory(data.history);
+  const history = cherenkovHistory(data.history);
   const historyCount = `${history.length} history runs · ${unique(history.map(r => r.device.model_identifier)).length} device models`;
   $('archiveCount').textContent = historyCount;
   Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -125,19 +125,15 @@ async function main() {
     ['frame-p50','frame-p99','gpu-p50','cpu-p50','process','gpu-energy','process-energy']);
 
   function deviceRows() { return history.filter(r => r.device.model_identifier === $('historyDevice').value); }
-  function engineRows() { return deviceRows().filter(r => r.engine === $('historyEngine').value); }
-  function selectEngine() {
-    options('historyEngine',unique(deviceRows().map(r => r.engine)).map(e => [e,e])); renderHistory();
-  }
   const conditionSelection = new Map();
   function renderHistory() {
-    panels('history', unique(engineRows().map(r => r.scene)), (scene, part) => {
-      const rows = engineRows().filter(r => r.scene === scene);
+    panels('history', unique(deviceRows().map(r => r.scene)), (scene, part) => {
+      const rows = deviceRows().filter(r => r.scene === scene);
       const conditions = part('historyConditions');
       const keys = unique(rows.map(r => r.comparison_key));
       conditions.replaceChildren(...keys.map((key, index) => {
         const r = rows.find(r => r.comparison_key === key), config = r.configuration;
-        return new Option(`${r.width} × ${r.height} · ${config.rate_hz ?? 'unspecified'} Hz · ${config.mode ?? (config.clocks ? 'fixed clocks' : 'recorded configuration')} · set ${index + 1}`, key);
+        return new Option(`${r.engine === 'cherenkov-cpu' ? 'CPU' : 'GPU'} · ${r.width} × ${r.height} · ${config.rate_hz ?? 'unspecified'} Hz · ${config.mode ?? (config.clocks ? 'fixed clocks' : 'recorded configuration')} · set ${index + 1}`, key);
       }));
       const saved = conditionSelection.get(scene);
       if (keys.includes(saved)) conditions.value = saved;
@@ -202,10 +198,9 @@ async function main() {
       cell(tr,details); part('historyRows').append(tr);
     }
   }
-  $('historyDevice').onchange = selectEngine;
-  $('historyEngine').onchange = renderHistory;
+  $('historyDevice').onchange = renderHistory;
   $('zeroAxis').onchange = renderHistory;
-  selectEngine();
+  renderHistory();
 
   switches('snapshotBackend', [['gpu','GPU'],['cpu','CPU']], selectSnapshotScene);
   switches('snapshotMetric', [
