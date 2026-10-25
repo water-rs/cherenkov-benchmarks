@@ -61,16 +61,16 @@ def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, jou
         data = json.load(f)
     timing = summarize(data, True)["timing_ms"]
     gpu_p50 = timing["gpu"]["p50"] if timing["gpu"] else None
-    frame_p50 = timing["frame"]["p50"]
+    cpu_p50 = timing["cpu"]["p50"]
     dt = time.time() - t0
     if gpu_p50 is not None:
         print(
-            f"  -> done in {dt:.1f}s | gpu_p50={gpu_p50:.3f}ms frame_p50={frame_p50:.3f}ms",
+            f"  -> done in {dt:.1f}s | gpu_p50={gpu_p50:.3f}ms cpu_p50={cpu_p50:.3f}ms",
             flush=True,
         )
     else:
         print(
-            f"  -> done in {dt:.1f}s | frame_p50={frame_p50:.3f}ms",
+            f"  -> done in {dt:.1f}s | cpu_p50={cpu_p50:.3f}ms",
             flush=True,
         )
 

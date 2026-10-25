@@ -10,6 +10,8 @@ import os
 import statistics
 from pathlib import Path
 
+from archive import timing_samples
+
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUNS_DIR = os.path.join(REPO_ROOT, "runs")
 DOCS_DIR = os.path.join(REPO_ROOT, "docs")
@@ -17,7 +19,7 @@ SCENES = ["chart", "text-page", "ui-list", "map", "effects"]
 
 
 def p50(vals):
-    return statistics.median(vals) if vals else None
+    return statistics.median(vals) if vals and all(v is not None for v in vals) else None
 
 
 def p99(vals):
@@ -32,18 +34,8 @@ def parse_measure_json(path):
     with open(path) as f:
         d = json.load(f)
     samples = d.get("samples", [])
-    cpu = [(s["encode_seconds"] + s["submit_seconds"]) * 1000.0 for s in samples]
-    gpu = [s["gpu_seconds"] * 1000.0 for s in samples if s.get("gpu_seconds") is not None]
-    frm = [
-        max(c, g) if g is not None else c
-        for c, g in zip(
-            cpu,
-            [
-                s.get("gpu_seconds") * 1000.0 if s.get("gpu_seconds") is not None else None
-                for s in samples
-            ],
-        )
-    ]
+    timing = timing_samples(d)
+    cpu, gpu, latency = timing["cpu"], timing["gpu"], timing["latency"]
 
     energy = d.get("energy") or {}
     rails = energy.get("rails") or {}
@@ -78,10 +70,11 @@ def parse_measure_json(path):
     return {
         "prepare_ms": (d.get("prepare_seconds") or 0.0) * 1000.0,
         "cpu_p50_ms": p50(cpu),
+        "gpu_timing_unavailable": d.get("gpu_timing_unavailable"),
         "gpu_p50_ms": p50(gpu),
         "gpu_p99_ms": p99(gpu),
-        "frame_p50_ms": p50(frm),
-        "frame_p99_ms": p99(frm),
+        "latency_p50_ms": p50(latency),
+        "latency_p99_ms": p99(latency),
         "energy_mj": energy_mj,
         "gpu_rail_mj": gpu_mj,
         "process_mem_mib": phys_mib,
@@ -108,13 +101,14 @@ def aggregate_run(run_dir):
                 mem_path = os.path.join(ipad_dir, "metal-mem", f"{sc}-{eng}", "measure.json")
                 metal_mib = parse_measure_json(mem_path)["driver_gpu_mem_mib"] if os.path.exists(mem_path) else 0.0
                 ipad_data["gpu"][sc][eng] = {
-                    "gpu_p50_ms": statistics.median([x["gpu_p50_ms"] for x in rounds]),
-                    "gpu_p99_ms": statistics.median([x["gpu_p99_ms"] for x in rounds]),
-                    "cpu_p50_ms": statistics.median([x["cpu_p50_ms"] for x in rounds]),
-                    "frame_p50_ms": statistics.median([x["frame_p50_ms"] for x in rounds]),
-                    "frame_p99_ms": statistics.median([x["frame_p99_ms"] for x in rounds]),
-                    "energy_mj": statistics.median([x["energy_mj"] for x in rounds]),
-                    "process_mem_mib": statistics.median([x["process_mem_mib"] for x in rounds]),
+                    "gpu_timing_unavailable": rounds[0]["gpu_timing_unavailable"],
+                    "gpu_p50_ms": p50([x["gpu_p50_ms"] for x in rounds]),
+                    "gpu_p99_ms": p50([x["gpu_p99_ms"] for x in rounds]),
+                    "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
+                    "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
+                    "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "energy_mj": p50([x["energy_mj"] for x in rounds]),
+                    "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
                     "driver_gpu_mem_mib": metal_mib,
                 }
             ipad_data["cpu"][sc] = {}
@@ -124,10 +118,11 @@ def aggregate_run(run_dir):
                     for r in range(3)
                 ]
                 ipad_data["cpu"][sc][eng] = {
-                    "frame_p50_ms": statistics.median([x["frame_p50_ms"] for x in rounds]),
-                    "frame_p99_ms": statistics.median([x["frame_p99_ms"] for x in rounds]),
-                    "energy_mj": statistics.median([x["energy_mj"] for x in rounds]),
-                    "process_mem_mib": statistics.median([x["process_mem_mib"] for x in rounds]),
+                    "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
+                    "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
+                    "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "energy_mj": p50([x["energy_mj"] for x in rounds]),
+                    "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
                 }
         out["devices"]["ipad-pro-m4"] = ipad_data
 
@@ -143,15 +138,16 @@ def aggregate_run(run_dir):
                     for r in range(3)
                 ]
                 p9_data["gpu"][sc][eng] = {
-                    "gpu_p50_ms": statistics.median([x["gpu_p50_ms"] for x in rounds]),
-                    "gpu_p99_ms": statistics.median([x["gpu_p99_ms"] for x in rounds]),
-                    "cpu_p50_ms": statistics.median([x["cpu_p50_ms"] for x in rounds]),
-                    "frame_p50_ms": statistics.median([x["frame_p50_ms"] for x in rounds]),
-                    "frame_p99_ms": statistics.median([x["frame_p99_ms"] for x in rounds]),
-                    "energy_mj": statistics.median([x["energy_mj"] for x in rounds]),
-                    "gpu_rail_mj": statistics.median([x["gpu_rail_mj"] for x in rounds]),
-                    "process_mem_mib": statistics.median([x["process_mem_mib"] for x in rounds]),
-                    "driver_gpu_mem_mib": statistics.median([x["driver_gpu_mem_mib"] for x in rounds]),
+                    "gpu_timing_unavailable": rounds[0]["gpu_timing_unavailable"],
+                    "gpu_p50_ms": p50([x["gpu_p50_ms"] for x in rounds]),
+                    "gpu_p99_ms": p50([x["gpu_p99_ms"] for x in rounds]),
+                    "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
+                    "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
+                    "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "energy_mj": p50([x["energy_mj"] for x in rounds]),
+                    "gpu_rail_mj": p50([x["gpu_rail_mj"] for x in rounds]),
+                    "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
+                    "driver_gpu_mem_mib": p50([x["driver_gpu_mem_mib"] for x in rounds]),
                 }
             p9_data["cpu"][sc] = {}
             for eng in ["cherenkov-cpu", "skia-cpu", "vello-cpu"]:
@@ -160,10 +156,11 @@ def aggregate_run(run_dir):
                     for r in range(3)
                 ]
                 p9_data["cpu"][sc][eng] = {
-                    "frame_p50_ms": statistics.median([x["frame_p50_ms"] for x in rounds]),
-                    "frame_p99_ms": statistics.median([x["frame_p99_ms"] for x in rounds]),
-                    "energy_mj": statistics.median([x["energy_mj"] for x in rounds]),
-                    "process_mem_mib": statistics.median([x["process_mem_mib"] for x in rounds]),
+                    "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
+                    "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
+                    "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "energy_mj": p50([x["energy_mj"] for x in rounds]),
+                    "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
                 }
         out["devices"]["pixel-9-pro"] = p9_data
 
@@ -221,17 +218,20 @@ def render_svgs(latest_run, assets_dir):
 
         # GPU Timing SVG
         fig, axes = plt.subplots(1, 2, figsize=(15, 5.6))
-        fig.suptitle(f"{dev_title} — GPU & Frame Timing (Lower is Better)", fontsize=14, fontweight="bold", y=0.98)
+        fig.suptitle(f"{dev_title} — GPU Execution & Completion Latency", fontsize=14, fontweight="bold", y=0.98)
         for idx, (mkey, mtitle) in enumerate([
             ("gpu_p50_ms", "GPU Execution Time p50 (ms)"),
-            ("frame_p50_ms", "Total Frame Time p50 — max(CPU, GPU) (ms)"),
+            ("latency_p50_ms", "Encode-to-completion Latency p50 (ms)"),
         ]):
             ax = axes[idx]
             for i, eng in enumerate(gpu_engines):
                 vals = [dev["gpu"][sc][eng][mkey] for sc in SCENES]
+                vals = [v if v is not None else np.nan for v in vals]
                 bars = ax.bar(x + (i - 1.5) * width, vals, width, label=eng, color=colors_gpu[eng], edgecolor="white", linewidth=0.6, zorder=3)
                 for bar, v in zip(bars, vals):
-                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(vals) * 0.02), f"{v:.2f}" if v < 10 else f"{v:.1f}", ha="center", va="bottom", fontsize=7.5, fontweight="bold")
+                    if not np.isfinite(v):
+                        continue
+                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(v for v in vals if np.isfinite(v)) * 0.02), f"{v:.2f}" if v < 10 else f"{v:.1f}", ha="center", va="bottom", fontsize=7.5, fontweight="bold")
             ax.axhline(8.333, color="#EF4444", linestyle=":", linewidth=1.4, label="120 Hz Budget (8.33 ms)", zorder=4)
             ax.set_title(mtitle, pad=10)
             ax.set_ylabel("Milliseconds (ms)")
@@ -255,12 +255,16 @@ def render_svgs(latest_run, assets_dir):
             all_vals = []
             for i, eng in enumerate(gpu_engines):
                 vals = [dev["gpu"][sc][eng][mkey] for sc in SCENES]
-                all_vals.extend(vals)
+                vals = [v if v is not None else np.nan for v in vals]
+                all_vals.extend(v for v in vals if np.isfinite(v))
             panel_max = max(all_vals) if all_vals else 1.0
             for i, eng in enumerate(gpu_engines):
                 vals = [dev["gpu"][sc][eng][mkey] for sc in SCENES]
+                vals = [v if v is not None else np.nan for v in vals]
                 bars = ax.bar(x + (i - 1.5) * width, vals, width, label=eng, color=colors_gpu[eng], edgecolor="white", linewidth=0.6, zorder=3)
                 for bar, v in zip(bars, vals):
+                    if not np.isfinite(v):
+                        continue
                     ax.text(
                         bar.get_x() + bar.get_width() / 2,
                         bar.get_height() + (panel_max * 0.025),
@@ -285,15 +289,18 @@ def render_svgs(latest_run, assets_dir):
         fig, axes = plt.subplots(1, 2, figsize=(14.5, 5.4))
         fig.suptitle(f"{dev_title} — CPU Rasterizers at Scene Resolution", fontsize=14, fontweight="bold", y=0.98)
         for idx, (mkey, mtitle, ylabel, fmt) in enumerate([
-            ("frame_p50_ms", "CPU Frame Time p50 (ms)", "Milliseconds (ms)", "{:.1f}"),
+            ("cpu_p50_ms", "CPU Render Time p50 (ms)", "Milliseconds (ms)", "{:.1f}"),
             ("process_mem_mib", "Process Memory (MiB)", "MiB (Steady)", "{:.1f}"),
         ]):
             ax = axes[idx]
             for i, eng in enumerate(cpu_engines):
                 vals = [dev["cpu"][sc][eng][mkey] for sc in SCENES]
+                vals = [v if v is not None else np.nan for v in vals]
                 bars = ax.bar(x + (i - 1.0) * width_cpu, vals, width_cpu, label=eng, color=colors_cpu[eng], edgecolor="white", linewidth=0.6, zorder=3)
                 for bar, v in zip(bars, vals):
-                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(vals) * 0.02), fmt.format(v), ha="center", va="bottom", fontsize=8, fontweight="bold")
+                    if not np.isfinite(v):
+                        continue
+                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(v for v in vals if np.isfinite(v)) * 0.02), fmt.format(v), ha="center", va="bottom", fontsize=8, fontweight="bold")
             ax.set_title(mtitle, pad=10)
             ax.set_ylabel(ylabel)
             ax.set_xticks(x)

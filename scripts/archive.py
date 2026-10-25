@@ -25,27 +25,36 @@ def quantiles(values):
             "p99": values[math.ceil(len(values) * 0.99) - 1]}
 
 
+def timing_samples(report):
+    """Milliseconds for measured intervals; unavailable intervals stay absent."""
+    samples = report["samples"]
+    result = {"cpu": [(s["encode_seconds"] + s["submit_seconds"]) * 1000 for s in samples]}
+    for metric, field in (("gpu", "gpu_seconds"), ("latency", "latency_seconds"),
+                          ("gpu_wait", "gpu_wait_seconds")):
+        values = [sample.get(field) for sample in samples]
+        if any(value is None for value in values) and not all(value is None for value in values):
+            raise ValueError(f"{metric} measurements are missing from only some frames")
+        result[metric] = [value * 1000 for value in values if value is not None]
+    return result
+
+
 def summarize(report, valid):
     if not valid:
         return None
     samples = report["samples"]
     if not samples:
         raise ValueError("a valid measurement must contain frames")
-    cpu = [(s["encode_seconds"] + s["submit_seconds"]) * 1000 for s in samples]
-    gpu = [s["gpu_seconds"] * 1000 if s["gpu_seconds"] is not None else None
-           for s in samples]
-    if any(v is None for v in gpu) and not all(v is None for v in gpu):
-        raise ValueError("GPU timestamps are missing from only some frames")
-    frame = [max(c, g) if g is not None else c for c, g in zip(cpu, gpu)]
+    timing = timing_samples(report)
     counters = {}
     if samples[0].get("gpu_counters") is not None:
         for key in samples[0]["gpu_counters"]:
             counters[key] = quantiles([s["gpu_counters"][key] for s in samples])
-    return {"frames": len(samples), "timing_ms": {
-                "cpu": quantiles(cpu), "gpu": quantiles([v for v in gpu if v is not None]),
-                "frame": quantiles(frame)},
+    return {"frames": len(samples),
+            "timing_ms": {metric: quantiles(values) for metric, values in timing.items()},
+            "gpu_timing_unavailable": report.get("gpu_timing_unavailable"),
             "gpu_counters": counters, "energy": report.get("energy"),
             "memory": report.get("memory")}
+
 
 
 def validate_identity(metadata):
@@ -74,6 +83,7 @@ def archive(root, report, metadata):
     comparison = {"device": device, "engine": report["engine"],
                   "scene": report["scene"], "width": report["width"],
                   "height": report["height"], "configuration": configuration,
+                  "wait_for_completion": report.get("wait_for_completion"),
                   "adapter": {key: value for key, value in report.get("device", {}).items()
                               if key in ("adapter", "backend", "driver", "driver_info", "target_format", "cpu")}}
     raw = {"schema_version": 1, "metadata": metadata, "report": report}

@@ -8,8 +8,8 @@ export function median(values) {
 const mib = value => finite(value) ? value / 1048576 : null;
 const mj = value => finite(value) ? value * 1000 : null;
 export const metrics = [
-  ...['frame', 'gpu', 'cpu'].flatMap(part => ['p50', 'p99'].map(q => ({
-    id: `${part}-${q}`, label: `${part === 'frame' ? 'Frame' : part.toUpperCase()} ${q}`, unit: 'ms',
+  ...['gpu', 'cpu', 'latency'].flatMap(part => ['p50', 'p99'].map(q => ({
+    id: `${part}-${q}`, label: `${part === 'latency' ? 'Latency' : part.toUpperCase()} ${q}`, unit: 'ms',
     value: row => row.statistics?.timing_ms?.[part]?.[q],
   }))),
   {id: 'engine-gpu', label: 'Engine GPU memory', unit: 'MiB', value: r => mib(r.statistics?.memory?.steady?.engine?.measured?.gpu_bytes)},
