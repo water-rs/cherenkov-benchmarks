@@ -12,6 +12,20 @@ function options(id, entries) {
   if (entries.some(([value]) => value === previous)) select.value = previous;
   select.disabled = !entries.length;
 }
+function selected(id) { return $(id).querySelector('[aria-pressed="true"]'); }
+function switches(id, entries, onChange) {
+  const group = $(id);
+  group.replaceChildren(...entries.map(([value, label], index) => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.textContent = label; button.dataset.value = value;
+    button.setAttribute('aria-pressed', String(index === 0));
+    button.onclick = () => {
+      for (const sibling of group.children) sibling.setAttribute('aria-pressed', String(sibling === button));
+      onChange();
+    };
+    return button;
+  }));
+}
 function cell(row, value, className = '') {
   const element = document.createElement('td');
   if (value instanceof Node) element.append(value); else element.textContent = value;
@@ -35,13 +49,26 @@ async function main() {
   $('archiveCount').textContent = historyCount;
   Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   Chart.defaults.font.size = 12;
-  const trendOptions = chartOptions();
-  trendOptions.interaction = {mode:'index',intersect:false};
-  trendOptions.scales.x.title = {display:true,text:'Commit · ordered by first measurement',color:'#777'};
-  const trend = new Chart($('historyChart'), {type:'line',data:{labels:[],datasets:[]},options:trendOptions});
-  const barOptions = chartOptions();
-  barOptions.indexAxis = 'y'; barOptions.scales.x.beginAtZero = true;
-  const bars = new Chart($('comparisonChart'), {type:'bar',data:{labels:[],datasets:[]},options:barOptions});
+  const charts = {history:[], snapshot:[]};
+  function panels(kind, scenes, render) {
+    charts[kind].forEach(chart => chart.destroy()); charts[kind] = [];
+    const container = $(`${kind}Panels`), group = $(`${kind}Scenes`);
+    const previous = new Map([...group.children].map(button => [button.dataset.value, button.getAttribute('aria-pressed') === 'true']));
+    container.replaceChildren(); group.replaceChildren();
+    for (const scene of scenes) {
+      const panel = $(`${kind}Template`).content.firstElementChild.cloneNode(true);
+      const button = document.createElement('button');
+      button.type = 'button'; button.textContent = scene; button.dataset.value = scene;
+      const visible = previous.get(scene) ?? true;
+      panel.hidden = !visible; button.setAttribute('aria-pressed', String(visible));
+      button.onclick = () => {
+        panel.hidden = !panel.hidden; button.setAttribute('aria-pressed', String(!panel.hidden));
+        charts[kind].forEach(chart => chart.resize());
+      };
+      group.append(button); container.append(panel);
+      render(scene, id => panel.querySelector(`[data-part="${id}"]`));
+    }
+  }
 
   function view(name) {
     $('archiveCount').textContent = name === 'history' ? historyCount : `${data.runs.length} cross-engine snapshots`;
@@ -49,7 +76,7 @@ async function main() {
       $(`${key}View`).hidden = key !== name;
       $(`${key}Tab`).setAttribute('aria-pressed',String(key === name));
     }
-    (name === 'history' ? trend : bars).resize();
+    charts[name].forEach(chart => chart.resize());
   }
   $('historyTab').onclick = () => view('history');
   $('snapshotTab').onclick = () => view('snapshot');
@@ -57,35 +84,44 @@ async function main() {
     const d = history.find(r => r.device.model_identifier === id).device;
     return [id, `${d.model} · ${id}`];
   }));
-  options('historyMetric', metrics.map(m => [m.id, `${m.label} · ${m.unit}`]));
+  switches('historyMetric', metrics.map(m => [m.id, m.label]), renderHistory);
 
   function deviceRows() { return history.filter(r => r.device.model_identifier === $('historyDevice').value); }
-  function sceneRows() { return deviceRows().filter(r => r.scene === $('historyScene').value); }
-  function engineRows() { return sceneRows().filter(r => r.engine === $('historyEngine').value); }
-  function selectScene() {
-    options('historyScene',unique(deviceRows().map(r => r.scene)).map(s => [s,s])); selectEngine();
-  }
+  function engineRows() { return deviceRows().filter(r => r.engine === $('historyEngine').value); }
   function selectEngine() {
-    options('historyEngine',unique(sceneRows().map(r => r.engine)).map(e => [e,e])); selectConditions();
+    options('historyEngine',unique(deviceRows().map(r => r.engine)).map(e => [e,e])); renderHistory();
   }
-  function selectConditions() {
-    const rows = engineRows();
-    options('historyConditions',unique(rows.map(r => r.comparison_key)).map((key, index) => {
-      const r = rows.find(r => r.comparison_key === key), config = r.configuration;
-      return [key, `${r.device.os} · ${r.width} × ${r.height} · ${config.rate_hz ?? 'unspecified'} Hz · ${config.mode ?? (config.clocks ? 'fixed clocks' : 'recorded configuration')} · set ${index + 1}`];
-    })); renderHistory();
-  }
+  const conditionSelection = new Map();
   function renderHistory() {
-    const rows = engineRows().filter(r => r.comparison_key === $('historyConditions').value);
-    const metric = metrics.find(m => m.id === $('historyMetric').value);
+    panels('history', unique(engineRows().map(r => r.scene)), (scene, part) => {
+      const rows = engineRows().filter(r => r.scene === scene);
+      const conditions = part('historyConditions');
+      const keys = unique(rows.map(r => r.comparison_key));
+      conditions.replaceChildren(...keys.map((key, index) => {
+        const r = rows.find(r => r.comparison_key === key), config = r.configuration;
+        return new Option(`${r.width} × ${r.height} · ${config.rate_hz ?? 'unspecified'} Hz · ${config.mode ?? (config.clocks ? 'fixed clocks' : 'recorded configuration')} · set ${index + 1}`, key);
+      }));
+      const saved = conditionSelection.get(scene);
+      if (keys.includes(saved)) conditions.value = saved;
+      const chartConfig = chartOptions();
+      chartConfig.interaction = {mode:'index',intersect:false};
+      chartConfig.scales.x.title = {display:true,text:'Commit · first measurement order',color:'#777'};
+      const trend = new Chart(part('historyChart'), {type:'line',data:{labels:[],datasets:[]},options:chartConfig});
+      charts.history.push(trend);
+      const draw = () => drawHistory(rows.filter(r => r.comparison_key === conditions.value), part, trend, scene);
+      conditions.onchange = () => { conditionSelection.set(scene, conditions.value); draw(); }; draw();
+    });
+  }
+  function drawHistory(rows, part, trend, scene) {
+    const metric = metrics.find(m => m.id === selected('historyMetric').dataset.value);
     const points = commitPoints(rows,metric);
     const first = points[0]?.value, last = points.at(-1)?.value;
     const delta = change(last,first);
-    $('metricTitle').textContent = `${metric.label} · ${metric.unit}`;
-    $('historyContext').textContent = rows.length ? `${rows[0].device.model} · ${rows[0].scene} · ${rows[0].engine}` : 'No archived measurements for this selection.';
-    $('historyDelta').textContent = points.length > 1 ? percent(delta) : '—';
-    $('historyDelta').className = delta < 0 ? 'improved' : delta > 0 ? 'regressed' : '';
-    $('pointCount').textContent = `${points.length} commits · ${rows.length} runs`;
+    part('metricTitle').textContent = `${scene} · ${metric.label} · ${metric.unit}`;
+    part('historyContext').textContent = rows.length ? `${rows[0].device.model} · ${rows[0].scene} · ${rows[0].engine}` : 'No archived measurements for this selection.';
+    part('historyDelta').textContent = points.length > 1 ? percent(delta) : '—';
+    part('historyDelta').className = delta < 0 ? 'improved' : delta > 0 ? 'regressed' : '';
+    part('pointCount').textContent = `${points.length} commits · ${rows.length} runs`;
     const color = colors[rows[0]?.engine] ?? '#555';
     trend.data.labels = points.map(p => p.revision.slice(0,9));
     trend.data.datasets = [
@@ -108,8 +144,8 @@ async function main() {
     if (rows.some(r => r.configuration.mode === 'screening')) notices.push('Screening measurements: not a controlled idle-host comparison.');
     if (metric.id === 'gpu-energy') notices.push('Whole-device GPU rail energy includes other GPU users; it is not application-exclusive energy.');
     if (metric.id === 'process-energy') notices.push('Process-attributed energy is not GPU-only energy.');
-    $('historyNotice').textContent = notices.join(' ');
-    const conditions = $('conditionsText'); conditions.replaceChildren();
+    part('historyNotice').textContent = notices.join(' ');
+    const conditions = part('conditionsText'); conditions.replaceChildren();
     if (rows.length) {
       const r = rows[0];
       paragraph(conditions, `${r.device.model} (${r.device.model_identifier}) · ${r.device.os} · ${r.device.gpu}`);
@@ -117,7 +153,7 @@ async function main() {
       for (const limitation of unique(rows.flatMap(r => r.metadata.limitations ?? []))) paragraph(conditions,limitation);
       const pre = document.createElement('pre'); pre.textContent = JSON.stringify(r.configuration,null,2); conditions.append(pre);
     }
-    $('historyRows').replaceChildren();
+    part('historyRows').replaceChildren();
     for (const point of points) {
       const tr = document.createElement('tr'); const diff = change(point.value,first);
       cell(tr,commitLink(point.revision,point.runs[0].metadata.source.repository));
@@ -125,14 +161,19 @@ async function main() {
       cell(tr,percent(diff),diff < 0 ? 'improved' : diff > 0 ? 'regressed' : ''); cell(tr,`${point.count}/${point.total}`);
       const details = document.createElement('details'), summary = document.createElement('summary'); summary.textContent = 'Raw JSON'; details.append(summary);
       point.runs.forEach((r,i) => details.append(link(`Run ${i+1} · ${date(r.metadata.recorded_at)}`,`https://github.com/water-rs/cherenkov-benchmarks/blob/main/${r.raw}`)));
-      cell(tr,details); $('historyRows').append(tr);
+      cell(tr,details); part('historyRows').append(tr);
     }
   }
-  $('historyDevice').onchange = selectScene; $('historyScene').onchange = selectEngine;
-  $('historyEngine').onchange = selectConditions; $('historyConditions').onchange = renderHistory;
-  $('historyMetric').onchange = renderHistory; $('zeroAxis').onchange = renderHistory;
-  selectScene();
+  $('historyDevice').onchange = selectEngine;
+  $('historyEngine').onchange = renderHistory;
+  $('zeroAxis').onchange = renderHistory;
+  selectEngine();
 
+  switches('snapshotBackend', [['gpu','GPU'],['cpu','CPU']], selectSnapshotScene);
+  switches('snapshotMetric', [
+    ['frame_p50_ms','Frame p50'], ['frame_p99_ms','Frame p99'], ['gpu_p50_ms','GPU p50'],
+    ['energy_mj','Energy'], ['process_mem_mib','Process memory'], ['driver_gpu_mem_mib','Driver GPU memory'],
+  ], renderSnapshot);
   options('snapshotRun',data.runs.map((r,i) => [String(i),r.provenance.run_id]));
   $('snapshotRun').value = String(data.runs.length-1);
   function selectSnapshotDevice() {
@@ -140,32 +181,35 @@ async function main() {
     options('snapshotDevice',Object.keys(run.devices).map(d => [d,run.provenance.devices[d].name])); selectSnapshotScene();
   }
   function selectSnapshotScene() {
-    const run = data.runs[Number($('snapshotRun').value)], dev = run.devices[$('snapshotDevice').value];
-    options('snapshotScene',Object.keys(dev[$('snapshotBackend').value]).map(s => [s,s])); renderSnapshot();
+    renderSnapshot();
   }
   function renderSnapshot() {
     const run = data.runs[Number($('snapshotRun').value)], deviceKey = $('snapshotDevice').value;
-    const scene = $('snapshotScene').value, backend = $('snapshotBackend').value, metric = $('snapshotMetric').value;
+    const backend = selected('snapshotBackend').dataset.value, metric = selected('snapshotMetric').dataset.value;
+    $('snapshotCommit').replaceChildren('Source ',commitLink(run.provenance.commit));
+    panels('snapshot', Object.keys(run.devices[deviceKey][backend]), (scene, part) => {
+      const barOptions = chartOptions(); barOptions.indexAxis = 'y'; barOptions.scales.x.beginAtZero = true;
+      const bars = new Chart(part('comparisonChart'), {type:'bar',data:{labels:[],datasets:[]},options:barOptions});
+      charts.snapshot.push(bars);
     const entries = Object.entries(run.devices[deviceKey][backend][scene]);
     entries.sort((a,b) => (finite(a[1][metric]) ? a[1][metric] : Infinity) - (finite(b[1][metric]) ? b[1][metric] : Infinity));
-    $('snapshotTitle').textContent = `${scene} · ${$('snapshotMetric').selectedOptions[0].textContent}`;
-    $('snapshotCommit').replaceChildren('Source ',commitLink(run.provenance.commit));
+    part('snapshotTitle').textContent = `${scene} · ${selected('snapshotMetric').textContent} · ${metric.endsWith('_ms') ? 'ms' : metric.endsWith('_mib') ? 'MiB' : 'mJ/frame'}`;
     bars.data.labels = entries.map(([engine]) => engine);
     bars.data.datasets = [{data:entries.map(([,r]) => finite(r[metric]) ? r[metric] : null),backgroundColor:entries.map(([e]) => colors[e] ?? '#777'),barThickness:18}];
     bars.update();
-    $('snapshotNote').textContent = (scene === 'ui-list' ? 'This historical ui-list workload is static; it does not measure scrolling. ' : '') +
+    part('snapshotNote').textContent = (scene === 'ui-list' ? 'This historical ui-list workload is static; it does not measure scrolling. ' : '') +
       (deviceKey === 'pixel-9-pro' ? 'Energy: selected whole-device GPU, prime-CPU and memory rails; not app-exclusive.' : 'Energy: process-attributed; not GPU-only.') +
       (entries.every(([,r]) => !finite(r[metric])) ? ' Selected metric is not reported for this backend.' : '');
-    $('snapshotRows').replaceChildren();
+    part('snapshotRows').replaceChildren();
     for (const [engine,r] of entries) {
       const tr = document.createElement('tr'), name = document.createElement('span'), dot = document.createElement('span');
       dot.className = 'engine-dot'; dot.style.backgroundColor = colors[engine] ?? '#777'; name.append(dot,engine); cell(tr,name);
       for (const key of ['frame_p50_ms','frame_p99_ms','gpu_p50_ms','gpu_p99_ms','cpu_p50_ms','energy_mj','process_mem_mib','driver_gpu_mem_mib']) cell(tr,number(r[key]));
-      $('snapshotRows').append(tr);
+      part('snapshotRows').append(tr);
     }
+    });
   }
   $('snapshotRun').onchange = selectSnapshotDevice; $('snapshotDevice').onchange = selectSnapshotScene;
-  $('snapshotBackend').onchange = selectSnapshotScene; $('snapshotScene').onchange = renderSnapshot; $('snapshotMetric').onchange = renderSnapshot;
   if (data.runs.length) selectSnapshotDevice(); else $('snapshotTab').disabled = true;
 }
 main().catch(error => { $('error').hidden = false; $('error').textContent = error.message; });
