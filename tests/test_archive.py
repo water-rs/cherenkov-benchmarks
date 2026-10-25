@@ -56,6 +56,21 @@ class ArchiveTests(unittest.TestCase):
             rows = [json.loads(line) for line in (root / yearly).read_text().splitlines()]
             self.assertNotEqual(rows[0]["comparison_key"], rows[1]["comparison_key"])
 
+    def test_scrolling_statistics_preserve_stopped_energy_and_distinguish_trajectories(self):
+        self.report["scroll_extent"] = [0, 200]
+        self.report["stopped"] = {"seconds": 1.0, "submissions": 0,
+                                  "energy": {"total_joules": 0.2, "joules_per_frame": None}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, yearly = archive.archive(root, self.report, self.metadata)
+            other = copy.deepcopy(self.report)
+            other["scroll_extent"] = [0, 400]
+            archive.archive(root, other, self.metadata)
+            rows = [json.loads(line) for line in (root / yearly).read_text().splitlines()]
+            self.assertNotEqual(rows[0]["comparison_key"], rows[1]["comparison_key"])
+            self.assertEqual(rows[0]["scroll_extent"], [0, 200])
+            self.assertEqual(rows[0]["statistics"]["stopped"], self.report["stopped"])
+
     def test_archive_is_idempotent_and_uses_eastern_calendar(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
