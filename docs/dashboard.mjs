@@ -13,19 +13,29 @@ function options(id, entries) {
   select.disabled = !entries.length;
 }
 function selected(id) { return $(id).querySelector('[aria-pressed="true"]'); }
-function switches(id, entries, onChange) {
-  const group = $(id);
-  group.replaceChildren(...entries.map(([value, label], index) => {
-    const button = document.createElement('button');
+function switches(id, entries, onChange, common = entries.map(([value]) => value)) {
+  const group = $(id), more = document.createElement('details');
+  more.className = 'choice-menu metric-more';
+  const summary = document.createElement('summary'), list = document.createElement('div');
+  summary.textContent = 'More'; list.className = 'metric-options';
+  more.append(summary, list); group.replaceChildren();
+  entries.forEach(([value, label], index) => {
+    const button = document.createElement('button'), primary = common.includes(value);
     button.type = 'button'; button.textContent = label; button.dataset.value = value;
     button.setAttribute('aria-pressed', String(index === 0));
     button.onclick = () => {
-      for (const sibling of group.children) sibling.setAttribute('aria-pressed', String(sibling === button));
+      for (const sibling of group.querySelectorAll('button')) sibling.setAttribute('aria-pressed', String(sibling === button));
+      summary.textContent = primary ? 'More' : `More · ${label}`;
+      summary.classList.toggle('selected', !primary);
+      const wasOpen = more.open; more.open = false;
+      if (wasOpen) summary.focus();
       onChange();
     };
-    return button;
-  }));
+    (primary ? group : list).append(button);
+  });
+  if (list.children.length) group.append(more);
 }
+
 function cell(row, value, className = '') {
   const element = document.createElement('td');
   if (value instanceof Node) element.append(value); else element.textContent = value;
@@ -53,23 +63,50 @@ async function main() {
   function panels(kind, scenes, render) {
     charts[kind].forEach(chart => chart.destroy()); charts[kind] = [];
     const container = $(`${kind}Panels`), group = $(`${kind}Scenes`);
-    const previous = new Map([...group.children].map(button => [button.dataset.value, button.getAttribute('aria-pressed') === 'true']));
+    const previous = new Map([...group.querySelectorAll('input')].map(input => [input.value, input.checked]));
+    const updateCount = () => { $(`${kind}SceneCount`).textContent = `${group.querySelectorAll('input:checked').length}/${scenes.length}`; };
     container.replaceChildren(); group.replaceChildren();
     for (const scene of scenes) {
       const panel = $(`${kind}Template`).content.firstElementChild.cloneNode(true);
-      const button = document.createElement('button');
-      button.type = 'button'; button.textContent = scene; button.dataset.value = scene;
+      const label = document.createElement('label'), input = document.createElement('input');
+      input.type = 'checkbox'; input.value = scene;
+      label.append(input, scene);
       const visible = previous.get(scene) ?? true;
-      panel.hidden = !visible; button.setAttribute('aria-pressed', String(visible));
-      button.onclick = () => {
-        panel.hidden = !panel.hidden; button.setAttribute('aria-pressed', String(!panel.hidden));
+      panel.hidden = !visible; input.checked = visible;
+      input.onchange = () => {
+        panel.hidden = !input.checked; updateCount();
         charts[kind].forEach(chart => chart.resize());
       };
-      group.append(button); container.append(panel);
+      group.append(label); container.append(panel);
       render(scene, id => panel.querySelector(`[data-part="${id}"]`));
     }
+    updateCount();
   }
 
+  function placeMenu(menu) {
+    const list = menu.lastElementChild;
+    list.style.left = '0px';
+    const bounds = list.getBoundingClientRect();
+    list.style.left = `${Math.min(0, innerWidth - 16 - bounds.right)}px`;
+  }
+  document.addEventListener('toggle', event => {
+    if (event.target.matches('.choice-menu[open]')) placeMenu(event.target);
+  }, true);
+  window.addEventListener('resize', () => {
+    document.querySelectorAll('.choice-menu[open]').forEach(placeMenu);
+  });
+  document.addEventListener('click', event => {
+    for (const menu of document.querySelectorAll('.choice-menu[open]')) {
+      if (!menu.contains(event.target)) menu.open = false;
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      for (const menu of document.querySelectorAll('.choice-menu[open]')) {
+        menu.open = false; menu.querySelector('summary').focus();
+      }
+    }
+  });
   function view(name) {
     $('archiveCount').textContent = name === 'history' ? historyCount : `${data.runs.length} cross-engine snapshots`;
     for (const key of ['history','snapshot']) {
@@ -84,7 +121,8 @@ async function main() {
     const d = history.find(r => r.device.model_identifier === id).device;
     return [id, `${d.model} · ${id}`];
   }));
-  switches('historyMetric', metrics.map(m => [m.id, m.label]), renderHistory);
+  switches('historyMetric', metrics.map(m => [m.id, m.label]), renderHistory,
+    ['frame-p50','frame-p99','gpu-p50','cpu-p50','process','gpu-energy','process-energy']);
 
   function deviceRows() { return history.filter(r => r.device.model_identifier === $('historyDevice').value); }
   function engineRows() { return deviceRows().filter(r => r.engine === $('historyEngine').value); }
@@ -173,7 +211,7 @@ async function main() {
   switches('snapshotMetric', [
     ['frame_p50_ms','Frame p50'], ['frame_p99_ms','Frame p99'], ['gpu_p50_ms','GPU p50'],
     ['energy_mj','Energy'], ['process_mem_mib','Process memory'], ['driver_gpu_mem_mib','Driver GPU memory'],
-  ], renderSnapshot);
+  ], renderSnapshot, ['frame_p50_ms','frame_p99_ms','gpu_p50_ms','energy_mj','process_mem_mib']);
   options('snapshotRun',data.runs.map((r,i) => [String(i),r.provenance.run_id]));
   $('snapshotRun').value = String(data.runs.length-1);
   function selectSnapshotDevice() {
