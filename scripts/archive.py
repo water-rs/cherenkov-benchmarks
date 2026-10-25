@@ -49,11 +49,14 @@ def summarize(report, valid):
     if samples[0].get("gpu_counters") is not None:
         for key in samples[0]["gpu_counters"]:
             counters[key] = quantiles([s["gpu_counters"][key] for s in samples])
-    return {"frames": len(samples),
+    result = {"frames": len(samples),
             "timing_ms": {metric: quantiles(values) for metric, values in timing.items()},
             "gpu_timing_unavailable": report.get("gpu_timing_unavailable"),
             "gpu_counters": counters, "energy": report.get("energy"),
             "memory": report.get("memory")}
+    if "stopped" in report:
+        result["stopped"] = report["stopped"]
+    return result
 
 
 
@@ -86,6 +89,8 @@ def archive(root, report, metadata):
                   "wait_for_completion": report.get("wait_for_completion"),
                   "adapter": {key: value for key, value in report.get("device", {}).items()
                               if key in ("adapter", "backend", "driver", "driver_info", "target_format", "cpu")}}
+    if "scroll_extent" in report:
+        comparison["scroll_extent"] = report["scroll_extent"]
     raw = {"schema_version": 1, "metadata": metadata, "report": report}
     run_id = hashlib.sha256(encoded(raw).encode()).hexdigest()
     model = re.sub(r"[^a-z0-9]+", "-", device["model_identifier"].lower()).strip("-")
