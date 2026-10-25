@@ -1,293 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cherenkov Cross-Engine Benchmarks — Interactive Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Cherenkov Benchmarks — Performance over commits</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #3b82f6;
-      --cherenkov: #3b82f6;
-      --skia: #10b981;
-      --vello-classic: #f59e0b;
-      --vello-hybrid: #a855f7;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-    header {
-      padding: 2rem 2rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    }
-    .container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
-    h1 { margin: 0 0 0.5rem; font-size: 1.85rem; letter-spacing: -0.02em; }
-    .subtitle { color: var(--muted); font-size: 0.98rem; margin: 0; }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin: 1.5rem 0;
-      padding: 1rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      align-items: center;
-    }
-    .control-group { display: flex; align-items: center; gap: 0.5rem; }
-    label { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; }
-    select {
-      background: #0f172a;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      padding: 0.45rem 0.8rem;
-      font-size: 0.92rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(580px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1.25rem;
-    }
-    .card h2 {
-      margin: 0 0 1rem;
-      font-size: 1.1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .badge {
-      font-size: 0.75rem;
-      padding: 0.2rem 0.55rem;
-      border-radius: 999px;
-      background: rgba(59, 130, 246, 0.18);
-      color: #93c5fd;
-      font-weight: 600;
-    }
-    .chart-box { position: relative; height: 340px; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-      margin-top: 0.5rem;
-    }
-    th, td {
-      padding: 0.6rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-      text-align: right;
-    }
-    th:first-child, td:first-child,
-    th:nth-child(2), td:nth-child(2) { text-align: left; }
-    th { color: var(--muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
-    tr.winner td { font-weight: 600; color: #93c5fd; }
-    footer {
-      text-align: center;
-      padding: 2rem;
-      color: var(--muted);
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border);
-      margin-top: 3rem;
-    }
-    a { color: #60a5fa; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="dashboard.mjs"></script>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <h1>Cherenkov Cross-Engine Benchmarks</h1>
-      <p class="subtitle">
-        Continuous hardware telemetry comparing <strong>Cherenkov (GPU / CPU)</strong> against <strong>Skia (Graphite Metal / Ganesh Vulkan / Raster)</strong> and <strong>Vello (Classic / Hybrid / CPU)</strong>
-      </p>
-    </div>
-  </header>
-
-  <main class="container">
-    <div class="controls">
-      <div class="control-group">
-        <label for="runSelect">Snapshot:</label>
-        <select id="runSelect"></select>
+  <header><div class="shell masthead"><a class="brand" href="./">Cherenkov <span>/ Benchmarks</span></a><nav aria-label="Resources"><a href="https://github.com/water-rs/cherenkov-benchmarks/tree/main/statistics">Data</a><a href="https://github.com/water-rs/cherenkov-benchmarks">GitHub ↗</a></nav></div></header>
+  <main class="shell">
+    <div class="view-bar"><div class="segments" role="group" aria-label="View"><button id="historyTab" aria-pressed="true">Commit history</button><button id="snapshotTab" aria-pressed="false">Engine comparison</button></div><span id="archiveCount" class="muted" aria-live="polite">Loading measurements…</span></div>
+    <p id="error" role="alert" hidden></p>
+    <section id="historyView" aria-label="Performance by commit">
+      <div class="filters">
+        <label>Device<select id="historyDevice"></select></label>
+        <label>Scene<select id="historyScene"></select></label>
+        <label>Engine<select id="historyEngine"></select></label>
+        <label>Metric<select id="historyMetric"></select></label>
       </div>
-      <div class="control-group">
-        <label for="deviceSelect">Device:</label>
-        <select id="deviceSelect">
-          <option value="ipad-pro-m4">iPad Pro 13-inch (M4) — Metal 2752×2064 @ 120Hz</option>
-          <option value="pixel-9-pro">Google Pixel 9 Pro — Mali-G715 Vulkan 960×2142 @ 120Hz</option>
-        </select>
+      <div class="condition-bar"><label>Test conditions<select id="historyConditions"></select></label><label class="checkbox"><input id="zeroAxis" type="checkbox"> Start axis at zero</label></div>
+      <div class="plot-panel">
+        <div class="plot-heading"><div><h2 id="metricTitle">Frame p50</h2><p id="historyContext" class="muted"></p></div><div class="delta"><strong id="historyDelta">—</strong><span>latest vs first measured commit</span></div></div>
+        <div class="chart-box"><canvas id="historyChart" role="img" aria-label="Performance across commits; values also appear in the table below"></canvas></div>
+        <p class="caption">Point: median across runs. Band: run minimum–maximum, not a confidence interval.</p>
+        <p id="historyNotice" class="notice" aria-live="polite"></p>
       </div>
-      <div id="provInfo" style="margin-left:auto; font-size:0.85rem; color:var(--muted);"></div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h2>GPU Execution Time p50 (ms) <span class="badge">Lower is Better · 8.33ms = 120Hz</span></h2>
-        <div class="chart-box"><canvas id="gpuTimeChart"></canvas></div>
-      </div>
-      <div class="card">
-        <h2>Total Frame Time p50 — max(CPU, GPU) (ms) <span class="badge">Lower is Better</span></h2>
-        <div class="chart-box"><canvas id="frameTimeChart"></canvas></div>
-      </div>
-      <div class="card">
-        <h2>Energy per Frame (mJ / frame) <span class="badge">Lower is Better</span></h2>
-        <div class="chart-box"><canvas id="energyChart"></canvas></div>
-      </div>
-      <div class="card">
-        <h2>Unified Driver GPU Memory — Steady (MiB) <span class="badge">MTLDevice / dumpsys gpumem</span></h2>
-        <div class="chart-box"><canvas id="gpuMemChart"></canvas></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom: 2rem;">
-      <h2>Detailed GPU Telemetry Table <span class="badge" id="tableBadge"></span></h2>
-      <div style="overflow-x:auto;">
-        <table id="gpuTable">
-          <thead>
-            <tr>
-              <th>Scene</th>
-              <th>Engine</th>
-              <th>GPU p50 (ms)</th>
-              <th>GPU p99 (ms)</th>
-              <th>CPU p50 (ms)</th>
-              <th>Frame p50 (ms)</th>
-              <th>Frame p99 (ms)</th>
-              <th>Energy (mJ/frame)</th>
-              <th>Driver GPU Mem (MiB)</th>
-              <th>Process Mem (MiB)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+      <details class="conditions"><summary>Measurement conditions &amp; limitations</summary><div id="conditionsText"></div></details>
+      <div class="table-heading"><h2>Measurements by commit</h2><span id="pointCount" class="muted"></span></div>
+      <div class="table-scroll"><table><thead><tr><th>Commit</th><th>First measured · Eastern</th><th>Median</th><th>Run range</th><th>Δ vs first</th><th>Runs</th><th>Source data</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+    </section>
+    <section id="snapshotView" aria-label="Cross-engine comparisons" hidden>
+      <div class="filters"><label>Snapshot<select id="snapshotRun"></select></label><label>Device<select id="snapshotDevice"></select></label><label>Scene<select id="snapshotScene"></select></label><label>Backend<select id="snapshotBackend"><option value="gpu">GPU</option><option value="cpu">CPU</option></select></label></div>
+      <div class="condition-bar"><label>Metric<select id="snapshotMetric"><option value="frame_p50_ms">Frame p50 · ms</option><option value="frame_p99_ms">Frame p99 · ms</option><option value="gpu_p50_ms">GPU p50 · ms</option><option value="energy_mj">Energy · mJ/frame</option><option value="process_mem_mib">Process memory · MiB</option><option value="driver_gpu_mem_mib">Driver GPU memory · MiB</option></select></label><span id="snapshotCommit" class="muted"></span></div>
+      <div class="plot-panel"><h2 id="snapshotTitle">Engine comparison</h2><div class="comparison-chart"><canvas id="comparisonChart" role="img" aria-label="Engine comparison; values also appear in the table below"></canvas></div><p class="caption">Median of three independent rounds. All engines shown for the selected scene and device. Lower is better.</p><p id="snapshotNote" class="notice"></p></div>
+      <div class="table-heading"><h2>Engine measurements</h2></div>
+      <div class="table-scroll"><table><thead><tr><th>Engine</th><th>Frame p50 · ms</th><th>Frame p99 · ms</th><th>GPU p50 · ms</th><th>GPU p99 · ms</th><th>CPU p50 · ms</th><th>Energy · mJ/frame</th><th>Process · MiB</th><th>Driver GPU · MiB</th></tr></thead><tbody id="snapshotRows"></tbody></table></div>
+    </section>
   </main>
-
-  <footer>
-    Source data &amp; reproducibility scripts: <a href="https://github.com/water-rs/cherenkov-benchmarks">water-rs/cherenkov-benchmarks</a> · Issue tracker: <a href="https://github.com/water-rs/waterui/issues/2187">water-rs/waterui#2187</a>
-  </footer>
-
-  <script>
-    const SCENES = ["chart", "text-page", "ui-list", "map", "effects"];
-    const COLORS = {
-      "cherenkov": "#3b82f6",
-      "skia-metal": "#10b981",
-      "skia-vulkan": "#10b981",
-      "vello-classic": "#f59e0b",
-      "vello-hybrid": "#a855f7"
-    };
-    let benchData = null;
-    let charts = {};
-
-    function makeChart(canvasId, yLabel) {
-      const ctx = document.getElementById(canvasId).getContext("2d");
-      return new Chart(ctx, {
-        type: "bar",
-        data: { labels: SCENES, datasets: [] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { labels: { color: "#e2e8f0" } }
-          },
-          scales: {
-            x: { ticks: { color: "#cbd5e1", font: { weight: "bold" } }, grid: { color: "#1e293b" } },
-            y: { beginAtZero: true, title: { display: true, text: yLabel, color: "#94a3b8" }, ticks: { color: "#cbd5e1" }, grid: { color: "#334155" } }
-          }
-        }
-      });
-    }
-
-    function render() {
-      const runIdx = document.getElementById("runSelect").value;
-      const devKey = document.getElementById("deviceSelect").value;
-      const run = benchData.runs[runIdx];
-      const dev = run.devices[devKey];
-      const prov = run.provenance;
-      document.getElementById("provInfo").innerHTML =
-        `Commit: <code>${prov.commit.slice(0, 9)}</code> · Date: <strong>${prov.date}</strong>`;
-      document.getElementById("tableBadge").textContent =
-        prov.devices[devKey].name + " (" + prov.devices[devKey].native_resolution + " @ 120Hz)";
-
-      const engines = Object.keys(dev.gpu["chart"]);
-
-      function updateBarChart(chart, metricKey) {
-        chart.data.datasets = engines.map(eng => ({
-          label: eng,
-          data: SCENES.map(sc => Number((dev.gpu[sc][eng][metricKey] || 0).toFixed(3))),
-          backgroundColor: COLORS[eng] || "#64748b",
-          borderRadius: 4
-        }));
-        chart.update();
-      }
-
-      updateBarChart(charts.gpuTime, "gpu_p50_ms");
-      updateBarChart(charts.frameTime, "frame_p50_ms");
-      updateBarChart(charts.energy, "energy_mj");
-      updateBarChart(charts.gpuMem, "driver_gpu_mem_mib");
-
-      const tbody = document.querySelector("#gpuTable tbody");
-      tbody.innerHTML = "";
-      for (const sc of SCENES) {
-        for (const eng of engines) {
-          const row = dev.gpu[sc][eng];
-          const tr = document.createElement("tr");
-          if (eng === "cherenkov") tr.className = "winner";
-          tr.innerHTML = `
-            <td><strong>${sc}</strong></td>
-            <td>${eng}</td>
-            <td>${row.gpu_p50_ms.toFixed(3)}</td>
-            <td>${row.gpu_p99_ms.toFixed(3)}</td>
-            <td>${row.cpu_p50_ms.toFixed(3)}</td>
-            <td>${row.frame_p50_ms.toFixed(3)}</td>
-            <td>${row.frame_p99_ms.toFixed(3)}</td>
-            <td>${row.energy_mj.toFixed(2)}</td>
-            <td>${row.driver_gpu_mem_mib.toFixed(1)}</td>
-            <td>${row.process_mem_mib.toFixed(1)}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-      }
-    }
-
-    async function init() {
-      const res = await fetch("./data.json");
-      benchData = await res.json();
-      const sel = document.getElementById("runSelect");
-      benchData.runs.forEach((r, idx) => {
-        const opt = document.createElement("option");
-        opt.value = idx;
-        opt.textContent = r.provenance.run_id;
-        sel.appendChild(opt);
-      });
-      sel.value = benchData.runs.length - 1;
-
-      charts.gpuTime = makeChart("gpuTimeChart", "Milliseconds (ms)");
-      charts.frameTime = makeChart("frameTimeChart", "Milliseconds (ms)");
-      charts.energy = makeChart("energyChart", "mJ / frame");
-      charts.gpuMem = makeChart("gpuMemChart", "MiB (Steady)");
-
-      sel.addEventListener("change", render);
-      document.getElementById("deviceSelect").addEventListener("change", render);
-      render();
-    }
-    init();
-  </script>
+  <footer class="shell"><a href="https://github.com/water-rs/cherenkov-benchmarks/tree/main/runs">Raw measurements ↗</a></footer>
 </body>
 </html>
