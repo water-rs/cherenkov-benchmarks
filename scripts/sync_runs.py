@@ -8,14 +8,41 @@ import logging
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import uuid
 
 from archive import archive, encoded, validate_identity
 
 
 def command(args, cwd):
-    return subprocess.run(args, cwd=cwd, text=True, capture_output=True,
-                          check=True, timeout=120).stdout.strip()
+    result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, timeout=120)
+    if result.returncode:
+        logging.error("Command failed: %s\n%s", args, result.stderr.strip())
+    result.check_returncode()
+    return result.stdout.strip()
+
+
+def merge_when_ready(url, head, checkout):
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        state = json.loads(command(["gh", "pr", "view", url, "--json",
+                                    "mergeable,statusCheckRollup,headRefOid"], checkout))
+        if state["headRefOid"] != head:
+            raise RuntimeError(f"publication head changed: {url}")
+        if state["mergeable"] == "CONFLICTING":
+            raise RuntimeError(f"publication conflicts with the base branch: {url}")
+        pending = False
+        for check in state["statusCheckRollup"]:
+            status = check.get("conclusion") or check.get("state") or check["status"]
+            if status in ("PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "REQUESTED"):
+                pending = True
+            elif status not in ("SUCCESS", "NEUTRAL", "SKIPPED"):
+                raise RuntimeError(f"publication check did not pass: {check}")
+        if state["mergeable"] == "MERGEABLE" and not pending:
+            command(["gh", "pr", "merge", url, "--merge", "--match-head-commit", head], checkout)
+            return
+        time.sleep(2)
+    raise TimeoutError(f"publication did not become ready within 60 seconds: {url}")
 
 
 class RunArchive:
@@ -77,8 +104,7 @@ def publish(directory, repository):
                        "--title", "data: archive hardware benchmark measurements",
                        "--body-file", str(body)], checkout)
         head = command(["git", "rev-parse", "HEAD"], checkout)
-        command(["gh", "pr", "merge", url, "--merge", "--auto",
-                 "--match-head-commit", head], checkout)
+        merge_when_ready(url, head, checkout)
         logging.info("Published hardware archive: %s", url)
         succeeded = True
     except Exception:

@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
-from sync_runs import RunArchive, command, publish
+from sync_runs import RunArchive, command, publish, merge_when_ready
 
 
 class SyncTests(unittest.TestCase):
@@ -58,6 +58,9 @@ class SyncTests(unittest.TestCase):
                     if args[1:3] == ["pr", "create"]:
                         publications.append(args)
                         return "https://example.invalid/pr/1"
+                    if args[1:3] == ["pr", "view"]:
+                        return json.dumps({"headRefOid": command(["git", "rev-parse", "HEAD"], cwd),
+                                           "mergeable": "MERGEABLE", "statusCheckRollup": []})
                     if args[1:3] == ["pr", "merge"]:
                         # Emulate GitHub merging the topic into the local test remote.
                         head = command(["git", "rev-parse", "HEAD"], cwd)
@@ -76,6 +79,16 @@ class SyncTests(unittest.TestCase):
             self.assertEqual(len(files), 2)
             self.assertEqual(command(["git", "status", "--porcelain"], repository), "")
             self.assertEqual(len(list(journal.directory.glob("runs/*/*/*.json"))), 1)
+
+    def test_waits_for_github_readiness_without_auto_merge(self):
+        states = [json.dumps({"headRefOid": "a", "mergeable": ready, "statusCheckRollup": []})
+                  for ready in ("UNKNOWN", "MERGEABLE")]
+        with patch("sync_runs.command", side_effect=[*states, ""]) as run:
+            with patch("sync_runs.time.sleep") as sleep:
+                merge_when_ready("pr-url", "a", Path("."))
+        sleep.assert_called_once_with(2)
+        self.assertEqual(run.call_args.args[0],
+                         ["gh", "pr", "merge", "pr-url", "--merge", "--match-head-commit", "a"])
 
     def test_network_failure_preserves_journal(self):
         with tempfile.TemporaryDirectory() as directory:
