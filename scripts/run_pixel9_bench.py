@@ -33,7 +33,7 @@ def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, jou
             f"/data/local/tmp/cherenkov-bench measure "
             f"--engine {engine} "
             f"--scene /data/local/tmp/scenes/perf/{scene} "
-            f"--native 960x2142 --rate 120 --warmup 30 --frames 120 --cpu 7 --energy "
+            f"--native 960x2142 --rate 120 --warmup 30 --frames 120 --wait-for-completion --energy "
             f"--out {remote_json}"
         )
     else:
@@ -41,7 +41,7 @@ def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, jou
             f"/data/local/tmp/cherenkov-bench measure "
             f"--engine {engine} "
             f"--scene /data/local/tmp/scenes/perf/{scene} "
-            f"--warmup 10 --frames 30 --cpu 7 --energy "
+            f"--warmup 10 --frames 30 --wait-for-completion --energy "
             f"--out {remote_json}"
         )
 
@@ -76,7 +76,10 @@ def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, jou
 
 
 def main():
-    options = runner_arguments("Run and automatically archive Pixel hardware benchmarks").parse_args()
+    parser = runner_arguments("Run and automatically archive Pixel hardware benchmarks")
+    parser.add_argument("--mode", choices=("all", "gpu", "cpu"), default="all")
+    parser.add_argument("--scenes", nargs="+", choices=SCENES + ["ui-list-scroll"], default=SCENES)
+    options = parser.parse_args()
     options.output.mkdir(parents=True, exist_ok=True)
     metadata = json.loads(options.metadata.read_text())
     properties = {}
@@ -95,23 +98,16 @@ def main():
 
 
 def measure(options, journal):
-    print("=== Running GPU Native (960x2142 @ 120Hz) Interleaved Rounds ===")
-    for r in range(ROUNDS):
-        engines = GPU_ENGINES if (r % 2 == 0) else list(reversed(GPU_ENGINES))
-        scenes = SCENES if (r % 2 == 0) else list(reversed(SCENES))
-        for scene in scenes:
-            for engine in engines:
-                run_cell(engine, scene, r, is_gpu=True, options=options, journal=journal)
-
-    print("=== Running CPU (Scene Resolution) Interleaved Rounds ===")
-    for r in range(ROUNDS):
-        engines = CPU_ENGINES if (r % 2 == 0) else list(reversed(CPU_ENGINES))
-        scenes = SCENES if (r % 2 == 0) else list(reversed(SCENES))
-        for scene in scenes:
-            for engine in engines:
-                run_cell(engine, scene, r, is_gpu=False, options=options, journal=journal)
-
-    print("=== All 105 Pixel 9 Pro benchmark runs completed! ===")
+    for mode, engines in (("gpu", GPU_ENGINES), ("cpu", CPU_ENGINES)):
+        if options.mode not in ("all", mode):
+            continue
+        print(f"Running {mode} comparisons: {len(options.scenes)} scenes, {ROUNDS} rounds")
+        for round_idx in range(ROUNDS):
+            order = 1 if round_idx % 2 == 0 else -1
+            for scene in options.scenes[::order]:
+                for engine in engines[::order]:
+                    run_cell(engine, scene, round_idx, is_gpu=mode == "gpu",
+                             options=options, journal=journal)
 
 
 if __name__ == "__main__":
