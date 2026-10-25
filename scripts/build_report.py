@@ -218,17 +218,20 @@ def render_svgs(latest_run, assets_dir):
 
         # GPU Timing SVG
         fig, axes = plt.subplots(1, 2, figsize=(15, 5.6))
-        fig.suptitle(f"{dev_title} — GPU & Frame Timing (Lower is Better)", fontsize=14, fontweight="bold", y=0.98)
+        fig.suptitle(f"{dev_title} — GPU Execution & Completion Latency", fontsize=14, fontweight="bold", y=0.98)
         for idx, (mkey, mtitle) in enumerate([
             ("gpu_p50_ms", "GPU Execution Time p50 (ms)"),
-            ("latency_p50_ms", "Total Frame Time p50 — max(CPU, GPU) (ms)"),
+            ("latency_p50_ms", "Encode-to-completion Latency p50 (ms)"),
         ]):
             ax = axes[idx]
             for i, eng in enumerate(gpu_engines):
                 vals = [dev["gpu"][sc][eng][mkey] for sc in SCENES]
+                vals = [v if v is not None else np.nan for v in vals]
                 bars = ax.bar(x + (i - 1.5) * width, vals, width, label=eng, color=colors_gpu[eng], edgecolor="white", linewidth=0.6, zorder=3)
                 for bar, v in zip(bars, vals):
-                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(vals) * 0.02), f"{v:.2f}" if v < 10 else f"{v:.1f}", ha="center", va="bottom", fontsize=7.5, fontweight="bold")
+                    if not np.isfinite(v):
+                        continue
+                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(v for v in vals if np.isfinite(v)) * 0.02), f"{v:.2f}" if v < 10 else f"{v:.1f}", ha="center", va="bottom", fontsize=7.5, fontweight="bold")
             ax.axhline(8.333, color="#EF4444", linestyle=":", linewidth=1.4, label="120 Hz Budget (8.33 ms)", zorder=4)
             ax.set_title(mtitle, pad=10)
             ax.set_ylabel("Milliseconds (ms)")
@@ -252,12 +255,16 @@ def render_svgs(latest_run, assets_dir):
             all_vals = []
             for i, eng in enumerate(gpu_engines):
                 vals = [dev["gpu"][sc][eng][mkey] for sc in SCENES]
-                all_vals.extend(vals)
+                vals = [v if v is not None else np.nan for v in vals]
+                all_vals.extend(v for v in vals if np.isfinite(v))
             panel_max = max(all_vals) if all_vals else 1.0
             for i, eng in enumerate(gpu_engines):
                 vals = [dev["gpu"][sc][eng][mkey] for sc in SCENES]
+                vals = [v if v is not None else np.nan for v in vals]
                 bars = ax.bar(x + (i - 1.5) * width, vals, width, label=eng, color=colors_gpu[eng], edgecolor="white", linewidth=0.6, zorder=3)
                 for bar, v in zip(bars, vals):
+                    if not np.isfinite(v):
+                        continue
                     ax.text(
                         bar.get_x() + bar.get_width() / 2,
                         bar.get_height() + (panel_max * 0.025),
@@ -282,15 +289,18 @@ def render_svgs(latest_run, assets_dir):
         fig, axes = plt.subplots(1, 2, figsize=(14.5, 5.4))
         fig.suptitle(f"{dev_title} — CPU Rasterizers at Scene Resolution", fontsize=14, fontweight="bold", y=0.98)
         for idx, (mkey, mtitle, ylabel, fmt) in enumerate([
-            ("latency_p50_ms", "CPU Frame Time p50 (ms)", "Milliseconds (ms)", "{:.1f}"),
+            ("cpu_p50_ms", "CPU Render Time p50 (ms)", "Milliseconds (ms)", "{:.1f}"),
             ("process_mem_mib", "Process Memory (MiB)", "MiB (Steady)", "{:.1f}"),
         ]):
             ax = axes[idx]
             for i, eng in enumerate(cpu_engines):
                 vals = [dev["cpu"][sc][eng][mkey] for sc in SCENES]
+                vals = [v if v is not None else np.nan for v in vals]
                 bars = ax.bar(x + (i - 1.0) * width_cpu, vals, width_cpu, label=eng, color=colors_cpu[eng], edgecolor="white", linewidth=0.6, zorder=3)
                 for bar, v in zip(bars, vals):
-                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(vals) * 0.02), fmt.format(v), ha="center", va="bottom", fontsize=8, fontweight="bold")
+                    if not np.isfinite(v):
+                        continue
+                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(v for v in vals if np.isfinite(v)) * 0.02), fmt.format(v), ha="center", va="bottom", fontsize=8, fontweight="bold")
             ax.set_title(mtitle, pad=10)
             ax.set_ylabel(ylabel)
             ax.set_xticks(x)

@@ -149,6 +149,9 @@ async function main() {
   function drawHistory(rows, part, trend, scene) {
     const metric = metrics.find(m => m.id === selected('historyMetric').dataset.value);
     const points = commitPoints(rows,metric);
+    const hasValues = points.some(p => finite(p.value));
+    part('historyChartBox').hidden = !hasValues;
+    part('historyCaption').hidden = !hasValues;
     const first = points[0]?.value, last = points.at(-1)?.value;
     const delta = change(last,first);
     part('metricTitle').textContent = `${scene} · ${metric.label} · ${metric.unit}`;
@@ -172,9 +175,9 @@ async function main() {
     }};
     trend.update();
     const notices = [];
-    if (!points.length) notices.push('No measurements available.');
+    if (!hasValues) notices.push(metric.id.startsWith('latency-') ? 'Completion latency has not been measured.' : 'This metric is unavailable.');
     else if (points.length === 1) notices.push('Only one measured commit: no trend can be inferred yet.');
-    if (points.some(p => p.count < p.total)) notices.push('Some runs lack this metric. Missing values are not plotted as zero.');
+    if (hasValues && points.some(p => p.count < p.total)) notices.push('Some runs lack this metric. Missing values are not plotted as zero.');
     if (rows.some(r => r.configuration.mode === 'screening')) notices.push('Screening measurements: not a controlled idle-host comparison.');
     if (metric.id === 'gpu-energy') notices.push('Whole-device GPU rail energy includes other GPU users; it is not application-exclusive energy.');
     if (metric.id === 'process-energy') notices.push('Process-attributed energy is not GPU-only energy.');
