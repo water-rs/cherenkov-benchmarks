@@ -202,6 +202,12 @@ async function main() {
   $('zeroAxis').onchange = renderHistory;
   renderHistory();
 
+  if (!data.runs.length) {
+    $('snapshotView').replaceChildren();
+    paragraph($('snapshotView'), 'No cross-engine measurements yet.');
+    return;
+  }
+
   switches('snapshotBackend', [['gpu','GPU'],['cpu','CPU']], selectSnapshotScene);
   switches('snapshotMetric', [
     ['frame_p50_ms','Frame p50'], ['frame_p99_ms','Frame p99'], ['gpu_p50_ms','GPU p50'],
@@ -243,6 +249,6 @@ async function main() {
     });
   }
   $('snapshotRun').onchange = selectSnapshotDevice; $('snapshotDevice').onchange = selectSnapshotScene;
-  if (data.runs.length) selectSnapshotDevice(); else $('snapshotTab').disabled = true;
+  selectSnapshotDevice();
 }
 main().catch(error => { $('error').hidden = false; $('error').textContent = error.message; });
