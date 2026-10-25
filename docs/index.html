@@ -15,29 +15,38 @@
     <div class="view-bar"><div class="segments" role="group" aria-label="View"><button id="historyTab" aria-pressed="true">Commit history</button><button id="snapshotTab" aria-pressed="false">Engine comparison</button></div><span id="archiveCount" class="muted" aria-live="polite">Loading measurements…</span></div>
     <p id="error" role="alert" hidden></p>
     <section id="historyView" aria-label="Performance by commit">
-      <div class="filters">
+      <div class="filters history-filters">
         <label>Device<select id="historyDevice"></select></label>
-        <label>Scene<select id="historyScene"></select></label>
         <label>Engine<select id="historyEngine"></select></label>
-        <label>Metric<select id="historyMetric"></select></label>
       </div>
-      <div class="condition-bar"><label>Test conditions<select id="historyConditions"></select></label><label class="checkbox"><input id="zeroAxis" type="checkbox"> Start axis at zero</label></div>
+      <div class="switch-control metric-control"><span id="historyMetricLabel">Metric</span><div id="historyMetric" class="segments wrap-segments" role="group" aria-labelledby="historyMetricLabel"></div></div>
+      <div class="scene-toolbar"><div class="switch-control"><span id="historySceneLabel">Scenes</span><div id="historyScenes" class="segments wrap-segments" role="group" aria-labelledby="historySceneLabel"></div></div><label class="checkbox"><input id="zeroAxis" type="checkbox"> Start axes at zero</label></div>
+      <div id="historyPanels" class="scene-grid"></div>
+      <template id="historyTemplate"><article class="scene-panel">
+      <div class="condition-bar"><label>Test conditions<select data-part="historyConditions"></select></label></div>
       <div class="plot-panel">
-        <div class="plot-heading"><div><h2 id="metricTitle">Frame p50</h2><p id="historyContext" class="muted"></p></div><div class="delta"><strong id="historyDelta">—</strong><span>latest vs first measured commit</span></div></div>
-        <div class="chart-box"><canvas id="historyChart" role="img" aria-label="Performance across commits; values also appear in the table below"></canvas></div>
+        <div class="plot-heading"><div><h2 data-part="metricTitle">Frame p50</h2><p data-part="historyContext" class="muted"></p></div><div class="delta"><strong data-part="historyDelta">—</strong><span>latest vs first measured commit</span></div></div>
+        <div class="chart-box"><canvas data-part="historyChart" role="img" aria-label="Performance across commits; values also appear in the table below"></canvas></div>
         <p class="caption">Point: median across runs. Band: run minimum–maximum, not a confidence interval.</p>
-        <p id="historyNotice" class="notice" aria-live="polite"></p>
+        <p data-part="historyNotice" class="notice" aria-live="polite"></p>
       </div>
-      <details class="conditions"><summary>Measurement conditions &amp; limitations</summary><div id="conditionsText"></div></details>
-      <div class="table-heading"><h2>Measurements by commit</h2><span id="pointCount" class="muted"></span></div>
-      <div class="table-scroll"><table><thead><tr><th>Commit</th><th>First measured · Eastern</th><th>Median</th><th>Run range</th><th>Δ vs first</th><th>Runs</th><th>Source data</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+      <details class="conditions"><summary>Measurement conditions &amp; limitations</summary><div data-part="conditionsText"></div></details>
+      <details class="measurements"><summary>Measurements by commit</summary><div class="table-heading"><h2>Measurements by commit</h2><span data-part="pointCount" class="muted"></span></div>
+      <div class="table-scroll"><table><thead><tr><th>Commit</th><th>First measured · Eastern</th><th>Median</th><th>Run range</th><th>Δ vs first</th><th>Runs</th><th>Source data</th></tr></thead><tbody data-part="historyRows"></tbody></table></div>
+</details>
+</article></template>
     </section>
     <section id="snapshotView" aria-label="Cross-engine comparisons" hidden>
-      <div class="filters"><label>Snapshot<select id="snapshotRun"></select></label><label>Device<select id="snapshotDevice"></select></label><label>Scene<select id="snapshotScene"></select></label><label>Backend<select id="snapshotBackend"><option value="gpu">GPU</option><option value="cpu">CPU</option></select></label></div>
-      <div class="condition-bar"><label>Metric<select id="snapshotMetric"><option value="frame_p50_ms">Frame p50 · ms</option><option value="frame_p99_ms">Frame p99 · ms</option><option value="gpu_p50_ms">GPU p50 · ms</option><option value="energy_mj">Energy · mJ/frame</option><option value="process_mem_mib">Process memory · MiB</option><option value="driver_gpu_mem_mib">Driver GPU memory · MiB</option></select></label><span id="snapshotCommit" class="muted"></span></div>
-      <div class="plot-panel"><h2 id="snapshotTitle">Engine comparison</h2><div class="comparison-chart"><canvas id="comparisonChart" role="img" aria-label="Engine comparison; values also appear in the table below"></canvas></div><p class="caption">Median of three independent rounds. All engines shown for the selected scene and device. Lower is better.</p><p id="snapshotNote" class="notice"></p></div>
-      <div class="table-heading"><h2>Engine measurements</h2></div>
-      <div class="table-scroll"><table><thead><tr><th>Engine</th><th>Frame p50 · ms</th><th>Frame p99 · ms</th><th>GPU p50 · ms</th><th>GPU p99 · ms</th><th>CPU p50 · ms</th><th>Energy · mJ/frame</th><th>Process · MiB</th><th>Driver GPU · MiB</th></tr></thead><tbody id="snapshotRows"></tbody></table></div>
+      <div class="filters"><label>Snapshot<select id="snapshotRun"></select></label><label>Device<select id="snapshotDevice"></select></label><div class="switch-control"><span id="backendLabel">Backend</span><div id="snapshotBackend" class="segments" role="group" aria-labelledby="backendLabel"></div></div></div>
+      <div class="condition-bar"><div class="switch-control"><span id="snapshotMetricLabel">Metric</span><div id="snapshotMetric" class="segments wrap-segments" role="group" aria-labelledby="snapshotMetricLabel"></div></div><span id="snapshotCommit" class="muted"></span></div>
+      <div class="scene-toolbar switch-control"><span id="snapshotSceneLabel">Scenes</span><div id="snapshotScenes" class="segments wrap-segments" role="group" aria-labelledby="snapshotSceneLabel"></div></div>
+      <div id="snapshotPanels" class="scene-grid"></div>
+      <template id="snapshotTemplate"><article class="scene-panel">
+      <div class="plot-panel"><h2 data-part="snapshotTitle">Engine comparison</h2><div class="comparison-chart"><canvas data-part="comparisonChart" role="img" aria-label="Engine comparison; values also appear in the table below"></canvas></div><p class="caption">Median of three independent rounds. All engines shown for the selected scene and device. Lower is better.</p><p data-part="snapshotNote" class="notice"></p></div>
+      <details class="measurements"><summary>Engine measurements</summary><div class="table-heading"><h2>Engine measurements</h2></div>
+      <div class="table-scroll"><table><thead><tr><th>Engine</th><th>Frame p50 · ms</th><th>Frame p99 · ms</th><th>GPU p50 · ms</th><th>GPU p99 · ms</th><th>CPU p50 · ms</th><th>Energy · mJ/frame</th><th>Process · MiB</th><th>Driver GPU · MiB</th></tr></thead><tbody data-part="snapshotRows"></tbody></table></div>
+</details>
+</article></template>
     </section>
   </main>
   <footer class="shell"><a href="https://github.com/water-rs/cherenkov-benchmarks/tree/main/runs">Raw measurements ↗</a></footer>

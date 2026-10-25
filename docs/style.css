@@ -21,11 +21,20 @@ h2 { font-size:16px; margin:0; font-weight:600; }
 .segments { display:inline-flex; }
 .segments button { border:1px solid var(--line); padding:8px 14px; background:white; color:var(--muted); }
 .segments button+button { border-left:0; }
+.switch-control { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.switch-control>span { font-size:12px; color:var(--muted); }
+.switch-control .segments button { font-size:12px; padding:8px 10px; white-space:nowrap; }
+.wrap-segments { display:flex; flex-wrap:wrap; align-self:flex-start; }
+.wrap-segments button, .wrap-segments button+button { border:1px solid var(--line); margin:0 -1px -1px 0; }
+.wrap-segments button[aria-pressed="true"] { position:relative; z-index:1; }
+.metric-control { margin-bottom:18px; }
 .segments button[aria-pressed="true"] { background:var(--ink); color:white; border-color:var(--ink); }
 .filters { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin:24px 0 16px; }
+.history-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
 label { display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; }
 select { border:1px solid var(--line); background:#fff; border-radius:0; color:var(--ink); padding:8px 28px 8px 10px; width:100%; min-width:0; }
 .condition-bar { margin-bottom:22px; }
+.condition-bar>.switch-control { flex:1; }
 .condition-bar>label:first-child { flex:1; max-width:760px; }
 .checkbox { display:flex; flex-direction:row; align-items:center; white-space:nowrap; padding-top:23px; }
 .plot-panel { border:1px solid var(--line); padding:24px 26px 18px; }
@@ -42,9 +51,9 @@ select { border:1px solid var(--line); background:#fff; border-radius:0; color:v
 .notice { font-size:12px; color:#806226; margin-top:8px; }
 .conditions { border-bottom:1px solid var(--line); padding:14px 0; font-size:12px; }
 summary { cursor:pointer; color:var(--muted); }
-#conditionsText { padding:15px 0 4px; }
-#conditionsText p { margin:0 0 8px; overflow-wrap:anywhere; }
-#conditionsText pre { white-space:pre-wrap; overflow-wrap:anywhere; background:#fafafa; padding:14px; font-size:11px; }
+.conditions [data-part="conditionsText"] { padding:15px 0 4px; }
+.conditions [data-part="conditionsText"] p { margin:0 0 8px; overflow-wrap:anywhere; }
+.conditions [data-part="conditionsText"] pre { white-space:pre-wrap; overflow-wrap:anywhere; background:#fafafa; padding:14px; font-size:11px; }
 .table-heading { margin:28px 0 12px; }
 .table-heading span { font-size:12px; }
 .table-scroll { overflow-x:auto; border:1px solid var(--line); }
@@ -62,9 +71,23 @@ footer { display:flex; justify-content:space-between; gap:20px; color:var(--mute
 #error { margin:24px 0; color:#a53c32; }
 @media(max-width:700px) {
  .shell { padding:0 16px; } .masthead { height:65px; gap:12px; } .brand { font-size:18px; } nav { gap:15px; font-size:12px; }
- .filters { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+ .filters,.history-filters { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
  .condition-bar { align-items:flex-start; flex-direction:column; gap:10px; } .condition-bar>label:first-child { width:100%; } .checkbox { padding-top:0; }
  .plot-panel { padding:17px 12px; } .plot-heading { gap:12px; flex-wrap:wrap; } .delta { text-align:left; } .chart-box { height:300px; }
  footer { flex-direction:column; gap:8px; } th,td { padding:12px; }
 }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
+
+.scene-toolbar { display:flex; justify-content:space-between; gap:16px; margin:20px 0; flex-wrap:wrap; }
+.scene-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 24px; }
+.scene-panel { min-width:0; }
+.scene-panel .plot-panel { padding:18px 16px; }
+.scene-panel .chart-box { height:280px; }
+.scene-panel .plot-heading { flex-direction:column; min-height:118px; }
+.scene-panel .delta { text-align:left; }
+.measurements { margin-top:14px; font-size:12px; }
+@media(max-width:800px) { .scene-grid { grid-template-columns:minmax(0,1fr); } }
+
+.scene-panel h2, .scene-panel .muted { overflow-wrap:anywhere; }
+#snapshotView .filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media(max-width:700px) { #snapshotView .filters { grid-template-columns:repeat(2,minmax(0,1fr)); } }
