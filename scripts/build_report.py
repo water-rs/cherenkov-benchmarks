@@ -3,6 +3,7 @@
 Aggregates raw JSON runs under runs/<run_id>/ into runs/<run_id>/summary.json
 and docs/data.json for the interactive GitHub Pages dashboard.
 """
+import hashlib
 import glob
 import json
 import os
@@ -304,6 +305,31 @@ def render_svgs(latest_run, assets_dir):
         plt.close()
 
 
+def build_dashboard(docs):
+    """Publish one content-addressed asset graph, including module dependencies."""
+    assets = docs / "assets"
+    assets.mkdir(exist_ok=True)
+
+    def publish(name, content):
+        source = Path(name)
+        digest = hashlib.sha256(content).hexdigest()
+        filename = f"{source.stem}.{digest}{source.suffix}"
+        (assets / filename).write_bytes(content)
+        return filename
+
+    history = publish("history.mjs", (docs / "history.mjs").read_bytes())
+    data = publish("data.json", (docs / "data.json").read_bytes())
+    style = publish("style.css", (docs / "style.css").read_bytes())
+    dashboard = (docs / "dashboard.mjs").read_text()
+    dashboard = dashboard.replace("'./history.mjs'", repr("./" + history))
+    dashboard = dashboard.replace("fetch('./data.json')", f"fetch(new URL('./{data}', import.meta.url))")
+    module = publish("dashboard.mjs", dashboard.encode())
+    html = (docs / "index.template.html").read_text()
+    html = html.replace('href="style.css"', f'href="assets/{style}"')
+    html = html.replace('src="dashboard.mjs"', f'src="assets/{module}"')
+    (docs / "index.html").write_text(html)
+
+
 def main():
     import sys
     all_runs = []
@@ -317,6 +343,7 @@ def main():
     os.makedirs(DOCS_DIR, exist_ok=True)
     with open(os.path.join(DOCS_DIR, "data.json"), "w") as f:
         json.dump({"runs": all_runs, "history": history}, f, separators=(",", ":"))
+    build_dashboard(Path(DOCS_DIR))
     print(f"Aggregated {len(all_runs)} run(s) into docs/data.json")
     if "--svg" in sys.argv and all_runs:
         assets_dir = os.path.join(DOCS_DIR, "assets")
