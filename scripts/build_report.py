@@ -7,6 +7,7 @@ import glob
 import json
 import os
 import statistics
+from pathlib import Path
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUNS_DIR = os.path.join(REPO_ROOT, "runs")
@@ -308,11 +309,14 @@ def main():
     all_runs = []
     for entry in sorted(os.listdir(RUNS_DIR)):
         rdir = os.path.join(RUNS_DIR, entry)
-        if os.path.isdir(rdir):
+        if os.path.isfile(os.path.join(rdir, "provenance.json")):
             all_runs.append(aggregate_run(rdir))
+    history = []
+    for path in sorted((Path(REPO_ROOT) / "statistics").glob("*.jsonl")):
+        history.extend(json.loads(line) for line in path.read_text().splitlines())
     os.makedirs(DOCS_DIR, exist_ok=True)
     with open(os.path.join(DOCS_DIR, "data.json"), "w") as f:
-        json.dump({"runs": all_runs}, f, separators=(",", ":"))
+        json.dump({"runs": all_runs, "history": history}, f, separators=(",", ":"))
     print(f"Aggregated {len(all_runs)} run(s) into docs/data.json")
     if "--svg" in sys.argv and all_runs:
         assets_dir = os.path.join(DOCS_DIR, "assets")
