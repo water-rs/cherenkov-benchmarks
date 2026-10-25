@@ -27,8 +27,9 @@ export const metrics = [
   {id: 'cycles', label: 'Shader active cycles p50', unit: 'cycles', value: r => r.statistics?.gpu_counters?.shader_core_active_cycles?.p50},
 ];
 
-export function validHistory(rows) {
-  return rows.filter(r => r.kind === 'run' && r.metadata.valid && r.statistics);
+export function cherenkovHistory(rows) {
+  return rows.filter(r => r.kind === 'run' && r.metadata.valid && r.statistics
+    && (r.engine === 'cherenkov' || r.engine === 'cherenkov-cpu'));
 }
 
 export function commitPoints(rows, metric) {
