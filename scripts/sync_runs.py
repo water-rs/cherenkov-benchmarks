@@ -68,7 +68,14 @@ class RunArchive:
         # The pulled report's timestamp survives an upload retry. The journal is
         # written before any network activity and is the retry input.
         report = json.loads(report_path.read_text())
+        if "unsupported" in report:
+            # The engine declined the scene and rendered nothing: there is no
+            # measurement to archive.
+            logging.warning("%s cannot render %s (%s); nothing archived",
+                            report["engine"], report["scene"], report["unsupported"])
+            return False
         archive(self.directory, report, metadata)
+        return True
 
     def publish(self, repository):
         publish(self.directory, repository)

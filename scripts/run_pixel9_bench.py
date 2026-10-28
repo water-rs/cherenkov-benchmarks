@@ -56,7 +56,8 @@ def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, jou
     subprocess.run(adb + ["pull", remote_json, out_file], capture_output=True, check=True, timeout=60)
     run_adb_cmd(adb, f"rm -f {remote_json}")
 
-    journal.record(out_file, configuration)
+    if not journal.record(out_file, configuration):
+        return
     with open(out_file) as f:
         data = json.load(f)
     timing = summarize(data, True)["timing_ms"]

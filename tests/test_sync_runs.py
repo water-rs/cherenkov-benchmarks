@@ -39,6 +39,18 @@ class SyncTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "different build or device"):
                 RunArchive(journal.directory, dict(self.metadata, source={"revision": "b" * 40}))
 
+    def test_unsupported_report_is_not_archived(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "report.json"
+            report.write_text(json.dumps({"engine": "skia-vulkan", "scene": "effects",
+                                          "unsupported": {"feature": "blend-space",
+                                                          "value": "srgb-encoded"}}))
+            journal = RunArchive(root / "journal", self.metadata)
+            with self.assertLogs(level="WARNING"):
+                self.assertFalse(journal.record(report, {"frames": 1}))
+            self.assertEqual(list(journal.directory.glob("runs/*/*/*.json")), [])
+
     def test_publish_uses_topic_branch_and_retry_does_not_append(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
