@@ -73,8 +73,9 @@ class RunArchive:
             # measurement to archive.
             logging.warning("%s cannot render %s (%s); nothing archived",
                             report["engine"], report["scene"], report["unsupported"])
-            return
+            return False
         archive(self.directory, report, metadata)
+        return True
 
     def publish(self, repository):
         publish(self.directory, repository)

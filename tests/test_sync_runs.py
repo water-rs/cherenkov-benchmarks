@@ -48,7 +48,7 @@ class SyncTests(unittest.TestCase):
                                                           "value": "srgb-encoded"}}))
             journal = RunArchive(root / "journal", self.metadata)
             with self.assertLogs(level="WARNING"):
-                journal.record(report, {"frames": 1})
+                self.assertFalse(journal.record(report, {"frames": 1}))
             self.assertEqual(list(journal.directory.glob("runs/*/*/*.json")), [])
 
     def test_publish_uses_topic_branch_and_retry_does_not_append(self):
