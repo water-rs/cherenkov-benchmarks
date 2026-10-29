@@ -96,7 +96,9 @@ def run_one_launch(run_id: str, args_list: list[list[str]], dest_dir: pathlib.Pa
 
 
 def main():
-    parser = runner_arguments("Run and automatically archive iPad hardware benchmarks")
+    parser = runner_arguments("Run and automatically archive Apple hardware benchmarks")
+    parser.add_argument("--native", required=True, metavar="WIDTHxHEIGHT",
+                        help="Native GPU surface size for the selected device")
     parser.add_argument("--mode", choices=("all", "gpu", "cpu"), default="all")
     parser.add_argument("--scenes", nargs="+", choices=SCENES + ["ui-list-scroll"], default=SCENES)
     options = parser.parse_args()
@@ -125,7 +127,7 @@ def measure(options, journal):
     out_root.mkdir(parents=True, exist_ok=True)
 
     if mode in ("all", "gpu"):
-        print("=== Running GPU Native (2752x2064 @ 120Hz, 3 interleaved rounds) ===", flush=True)
+        print(f"=== Running GPU Native ({options.native} @ 120Hz, 3 interleaved rounds) ===", flush=True)
         for round_idx in range(3):
             engines = GPU_ENGINES if round_idx % 2 == 0 else list(reversed(GPU_ENGINES))
             for scene in options.scenes:
@@ -136,7 +138,7 @@ def measure(options, journal):
                         "measure",
                         "--engine", engine,
                         "--scene", f"Documents/scenes/perf/{scene}",
-                        "--native", "2752x2064",
+                        "--native", options.native,
                         "--rate", "120",
                         "--energy",
                         "--wait-for-completion",
