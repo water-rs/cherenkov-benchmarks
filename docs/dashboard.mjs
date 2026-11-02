@@ -213,7 +213,7 @@ async function main() {
 
   switches('snapshotBackend', [['gpu','GPU'],['cpu','CPU']], selectSnapshotScene);
   switches('snapshotMetric', [
-    ['cpu_p50_ms','CPU p50'], ['latency_p50_ms','Latency p50'], ['latency_p99_ms','Latency p99'], ['gpu_p50_ms','GPU p50'],
+    ['latency_p50_ms','Latency p50'], ['cpu_p50_ms','CPU p50'], ['latency_p99_ms','Latency p99'], ['gpu_p50_ms','GPU p50'],
     ['energy_mj','Energy'], ['process_mem_mib','Process memory'], ['driver_gpu_mem_mib','Driver GPU memory'],
   ], renderSnapshot, ['cpu_p50_ms','latency_p50_ms','latency_p99_ms','gpu_p50_ms','energy_mj','process_mem_mib']);
   options('snapshotRun',data.runs.map((r,i) => [String(i),r.provenance.run_id]));
