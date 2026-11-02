@@ -49,6 +49,28 @@ function chartOptions() {
     plugins:{legend:{display:false}},
     scales:{x:{grid:{color:'#eee'},ticks:{color:'#777'}},y:{grid:{color:'#eee'},ticks:{color:'#777'},title:{display:true,color:'#555'}}}};
 }
+const budgetLabel = {
+  id:'budgetLabel',
+  afterDraw(chart, _args, opts) {
+    if (!opts?.display) return;
+    const {ctx, chartArea, scales} = chart;
+    ctx.save();
+    ctx.fillStyle = '#888';
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    if (opts.axis === 'x') {
+      const x = scales.x.getPixelForValue(opts.value);
+      ctx.textAlign = x > chartArea.left + (chartArea.right - chartArea.left) / 2 ? 'right' : 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(opts.text, x + (ctx.textAlign === 'right' ? -4 : 4), chartArea.top);
+    } else {
+      const y = scales.y.getPixelForValue(opts.value);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(opts.text, chartArea.right - 4, y - 2);
+    }
+    ctx.restore();
+  },
+};
 
 async function main() {
   const response = await fetch('./data.json');
@@ -140,7 +162,7 @@ async function main() {
       const chartConfig = chartOptions();
       chartConfig.interaction = {mode:'index',intersect:false};
       chartConfig.scales.x.title = {display:true,text:'Commit · first measurement order',color:'#777'};
-      const trend = new Chart(part('historyChart'), {type:'line',data:{labels:[],datasets:[]},options:chartConfig});
+      const trend = new Chart(part('historyChart'), {type:'line',data:{labels:[],datasets:[]},options:chartConfig,plugins:[budgetLabel]});
       charts.history.push(trend);
       const draw = () => drawHistory(rows.filter(r => r.comparison_key === conditions.value), part, trend, scene);
       conditions.onchange = () => { conditionSelection.set(scene, conditions.value); draw(); }; draw();
@@ -167,6 +189,7 @@ async function main() {
       {label:'Median',data:points.map(p => p.value),borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:4,pointHoverRadius:6,spanGaps:false,tension:0},
       ...(metric.unit === 'ms' ? [{label:'120 Hz (8.33 ms)',data:points.map(() => 8.333),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}] : []),
     ];
+    trend.options.plugins.budgetLabel = {display: metric.unit === 'ms', axis:'y', value:8.333, text:'120 Hz'};
     trend.options.scales.y.beginAtZero = $('zeroAxis').checked;
     trend.options.scales.y.title.text = `${metric.unit} · ${$('zeroAxis').checked ? 'zero baseline' : 'scaled to measured range'}`;
     trend.options.plugins.tooltip = {filter:item => item.datasetIndex === 2,callbacks:{
@@ -233,7 +256,7 @@ async function main() {
     $('snapshotCommit').replaceChildren('Source ',commitLink(run.provenance.commit));
     panels('snapshot', Object.keys(run.devices[deviceKey][backend]), (scene, part) => {
       const barOptions = chartOptions(); barOptions.indexAxis = 'y'; barOptions.scales.x.beginAtZero = true;
-      const bars = new Chart(part('comparisonChart'), {type:'bar',data:{labels:[],datasets:[]},options:barOptions});
+      const bars = new Chart(part('comparisonChart'), {type:'bar',data:{labels:[],datasets:[]},options:barOptions,plugins:[budgetLabel]});
       charts.snapshot.push(bars);
     const entries = Object.entries(run.devices[deviceKey][backend][scene]);
     entries.sort((a,b) => (finite(a[1][metric]) ? a[1][metric] : Infinity) - (finite(b[1][metric]) ? b[1][metric] : Infinity));
@@ -244,6 +267,8 @@ async function main() {
       ...(metric.endsWith('_ms') ? [{type:'line',label:'120 Hz (8.33 ms)',data:entries.map(() => 8.333),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0}]
         : metric === 'achieved_hz' ? [{type:'line',label:'120 Hz',data:entries.map(() => 120),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0}] : []),
     ];
+    bars.options.plugins.budgetLabel = metric.endsWith('_ms') ? {display:true,axis:'x',value:8.333,text:'120 Hz'}
+      : metric === 'achieved_hz' ? {display:true,axis:'x',value:120,text:'120 Hz'} : {display:false};
     bars.update();
     part('snapshotNote').textContent = (scene === 'ui-list' ? 'This historical ui-list workload is static; it does not measure scrolling. ' : '') +
       (deviceKey === 'pixel-9-pro' ? 'Energy: selected whole-device GPU, prime-CPU and memory rails; not app-exclusive.' : 'Energy: process-attributed; not GPU-only.') +
