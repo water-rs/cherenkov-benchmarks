@@ -56,7 +56,7 @@ async function main() {
   const data = await response.json();
   const history = cherenkovHistory(data.history);
   const historyCount = `${history.length} history runs · ${unique(history.map(r => r.device.model_identifier)).length} device models`;
-  $('archiveCount').textContent = historyCount;
+  $('archiveCount').textContent = `${data.runs.length} cross-engine snapshots`;
   Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   Chart.defaults.font.size = 12;
   const charts = {history:[], snapshot:[]};
