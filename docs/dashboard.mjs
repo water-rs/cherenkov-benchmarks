@@ -59,9 +59,9 @@ const budgetLabel = {
     ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     if (opts.axis === 'x') {
       const x = scales.x.getPixelForValue(opts.value);
-      ctx.textAlign = x > chartArea.left + (chartArea.right - chartArea.left) / 2 ? 'right' : 'left';
+      ctx.textAlign = 'right';
       ctx.textBaseline = 'top';
-      ctx.fillText(opts.text, x + (ctx.textAlign === 'right' ? -4 : 4), chartArea.top);
+      ctx.fillText(opts.text, x - 4, chartArea.top);
     } else {
       const y = scales.y.getPixelForValue(opts.value);
       ctx.textAlign = 'right';
