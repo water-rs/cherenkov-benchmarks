@@ -214,9 +214,10 @@ async function main() {
 
   switches('snapshotBackend', [['gpu','GPU'],['cpu','CPU']], selectSnapshotScene);
   switches('snapshotMetric', [
-    ['latency_p50_ms','Latency p50'], ['cpu_p50_ms','CPU p50'], ['latency_p99_ms','Latency p99'], ['gpu_p50_ms','GPU p50'],
+    ['latency_p50_ms','Latency p50'], ['frame_p50_ms','Frame p50'], ['latency_p99_ms','Latency p99'], ['frame_p99_ms','Frame p99'],
+    ['gpu_p50_ms','GPU p50'], ['cpu_p50_ms','CPU p50'], ['achieved_hz','Achieved Hz'],
     ['energy_mj','Energy'], ['process_mem_mib','Process memory'], ['driver_gpu_mem_mib','Driver GPU memory'],
-  ], renderSnapshot, ['cpu_p50_ms','latency_p50_ms','latency_p99_ms','gpu_p50_ms','energy_mj','process_mem_mib']);
+  ], renderSnapshot, ['cpu_p50_ms','latency_p50_ms','latency_p99_ms','gpu_p50_ms','frame_p50_ms','frame_p99_ms','achieved_hz','energy_mj','process_mem_mib']);
   options('snapshotRun',data.runs.map((r,i) => [String(i),r.provenance.run_id]));
   $('snapshotRun').value = String(data.runs.length-1);
   function selectSnapshotDevice() {
@@ -236,11 +237,12 @@ async function main() {
       charts.snapshot.push(bars);
     const entries = Object.entries(run.devices[deviceKey][backend][scene]);
     entries.sort((a,b) => (finite(a[1][metric]) ? a[1][metric] : Infinity) - (finite(b[1][metric]) ? b[1][metric] : Infinity));
-    part('snapshotTitle').textContent = `${scene} · ${selected('snapshotMetric').textContent} · ${metric.endsWith('_ms') ? 'ms' : metric.endsWith('_mib') ? 'MiB' : 'mJ/frame'}`;
+    part('snapshotTitle').textContent = `${scene} · ${selected('snapshotMetric').textContent} · ${metric.endsWith('_ms') ? 'ms' : metric === 'achieved_hz' ? 'Hz' : metric.endsWith('_mib') ? 'MiB' : 'mJ/frame'}`;
     bars.data.labels = entries.map(([engine]) => engine);
     bars.data.datasets = [
       {data:entries.map(([,r]) => finite(r[metric]) ? r[metric] : null),backgroundColor:entries.map(([e]) => colors[e] ?? '#777'),barThickness:18},
-      ...(metric.endsWith('_ms') ? [{type:'line',label:'120 Hz (8.33 ms)',data:entries.map(() => 8.333),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0}] : []),
+      ...(metric.endsWith('_ms') ? [{type:'line',label:'120 Hz (8.33 ms)',data:entries.map(() => 8.333),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0}]
+        : metric === 'achieved_hz' ? [{type:'line',label:'120 Hz',data:entries.map(() => 120),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0}] : []),
     ];
     bars.update();
     part('snapshotNote').textContent = (scene === 'ui-list' ? 'This historical ui-list workload is static; it does not measure scrolling. ' : '') +
@@ -250,7 +252,7 @@ async function main() {
     for (const [engine,r] of entries) {
       const tr = document.createElement('tr'), name = document.createElement('span'), dot = document.createElement('span');
       dot.className = 'engine-dot'; dot.style.backgroundColor = colors[engine] ?? '#777'; name.append(dot,engine); cell(tr,name);
-      for (const key of ['latency_p50_ms','latency_p99_ms','gpu_p50_ms','gpu_p99_ms','cpu_p50_ms','energy_mj','process_mem_mib','driver_gpu_mem_mib']) {
+      for (const key of ['latency_p50_ms','latency_p99_ms','frame_p50_ms','gpu_p50_ms','gpu_p99_ms','cpu_p50_ms','achieved_hz','missed_deadlines','energy_mj','process_mem_mib','driver_gpu_mem_mib']) {
         cell(tr, key.startsWith('gpu_p') && !finite(r[key]) ? (r.gpu_timing_unavailable ?? 'Unavailable') : number(r[key]));
       }
       part('snapshotRows').append(tr);
