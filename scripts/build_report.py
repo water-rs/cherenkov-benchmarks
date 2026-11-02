@@ -32,7 +32,8 @@ def p99(vals):
 
 def parse_measure_json(path):
     with open(path) as f:
-        d = json.load(f)
+        document = json.load(f)
+    d = document.get("report", document)
     samples = d.get("samples", [])
     timing = timing_samples(d)
     cpu, gpu, latency = timing["cpu"], timing["gpu"], timing["latency"]
@@ -144,15 +145,21 @@ def aggregate_run(run_dir):
                 }
         out["devices"]["ipad-pro-m4"] = ipad_data
 
+    def pixel_report(filename):
+        references = prov.get("reports", {}).get("pixel-9-pro")
+        path = (os.path.join(REPO_ROOT, references[filename]) if references is not None
+                else os.path.join(p9_dir, filename))
+        return parse_measure_json(path)
+
     # Pixel 9 Pro
     p9_dir = os.path.join(run_dir, "pixel-9-pro")
-    if os.path.isdir(p9_dir):
+    if os.path.isdir(p9_dir) or "pixel-9-pro" in prov.get("reports", {}):
         p9_data = {"gpu": {}, "cpu": {}}
         for sc in SCENES:
             p9_data["gpu"][sc] = {}
             for eng in ["cherenkov", "skia-vulkan", "vello-classic", "vello-hybrid"]:
                 rounds = [
-                    parse_measure_json(os.path.join(p9_dir, f"gpu_r{r}_{sc}_{eng}.json"))
+                    pixel_report(f"gpu_r{r}_{sc}_{eng}.json")
                     for r in range(3)
                 ]
                 p9_data["gpu"][sc][eng] = {
@@ -174,7 +181,7 @@ def aggregate_run(run_dir):
             p9_data["cpu"][sc] = {}
             for eng in ["cherenkov-cpu", "skia-cpu", "vello-cpu"]:
                 rounds = [
-                    parse_measure_json(os.path.join(p9_dir, f"cpu_r{r}_{sc}_{eng}.json"))
+                    pixel_report(f"cpu_r{r}_{sc}_{eng}.json")
                     for r in range(3)
                 ]
                 p9_data["cpu"][sc][eng] = {
