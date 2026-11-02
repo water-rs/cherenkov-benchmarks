@@ -53,20 +53,20 @@ const budgetLabel = {
   id:'budgetLabel',
   afterDraw(chart, _args, opts) {
     if (!opts?.display) return;
-    const {ctx, chartArea, scales} = chart;
+    const meta = chart.getDatasetMeta(chart.data.datasets.length - 1);
+    const point = meta?.data?.[0];
+    if (!point) return;
+    const {ctx, chartArea} = chart;
     ctx.save();
     ctx.fillStyle = '#888';
     ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textAlign = 'right';
     if (opts.axis === 'x') {
-      const x = scales.x.getPixelForValue(opts.value);
-      ctx.textAlign = 'right';
       ctx.textBaseline = 'top';
-      ctx.fillText(opts.text, x - 4, chartArea.top);
+      ctx.fillText(opts.text, point.x - 4, chartArea.top);
     } else {
-      const y = scales.y.getPixelForValue(opts.value);
-      ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(opts.text, chartArea.right - 4, y - 2);
+      ctx.fillText(opts.text, chartArea.right - 4, point.y - 4);
     }
     ctx.restore();
   },
