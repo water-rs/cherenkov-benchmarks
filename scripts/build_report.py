@@ -36,6 +36,12 @@ def parse_measure_json(path):
     samples = d.get("samples", [])
     timing = timing_samples(d)
     cpu, gpu, latency = timing["cpu"], timing["gpu"], timing["latency"]
+    frame = [
+        sample["completion_interval_seconds"] * 1000
+        for sample in samples
+        if sample.get("completion_interval_seconds") is not None
+    ]
+    pacing = d.get("pacing") or {}
 
     energy = d.get("energy") or {}
     rails = energy.get("rails") or {}
@@ -75,6 +81,10 @@ def parse_measure_json(path):
         "gpu_p99_ms": p99(gpu),
         "latency_p50_ms": p50(latency),
         "latency_p99_ms": p99(latency),
+        "frame_p50_ms": p50(frame),
+        "frame_p99_ms": p99(frame),
+        "achieved_hz": pacing.get("achieved_hz"),
+        "missed_deadlines": pacing.get("missed_deadlines"),
         "energy_mj": energy_mj,
         "gpu_rail_mj": gpu_mj,
         "process_mem_mib": phys_mib,
@@ -107,6 +117,10 @@ def aggregate_run(run_dir):
                     "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
                     "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
                     "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "frame_p50_ms": p50([x["frame_p50_ms"] for x in rounds]),
+                    "frame_p99_ms": p50([x["frame_p99_ms"] for x in rounds]),
+                    "achieved_hz": p50([x["achieved_hz"] for x in rounds]),
+                    "missed_deadlines": p50([x["missed_deadlines"] for x in rounds]),
                     "energy_mj": p50([x["energy_mj"] for x in rounds]),
                     "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
                     "driver_gpu_mem_mib": metal_mib,
@@ -121,6 +135,10 @@ def aggregate_run(run_dir):
                     "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
                     "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
                     "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "frame_p50_ms": p50([x["frame_p50_ms"] for x in rounds]),
+                    "frame_p99_ms": p50([x["frame_p99_ms"] for x in rounds]),
+                    "achieved_hz": p50([x["achieved_hz"] for x in rounds]),
+                    "missed_deadlines": p50([x["missed_deadlines"] for x in rounds]),
                     "energy_mj": p50([x["energy_mj"] for x in rounds]),
                     "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
                 }
@@ -144,6 +162,10 @@ def aggregate_run(run_dir):
                     "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
                     "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
                     "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "frame_p50_ms": p50([x["frame_p50_ms"] for x in rounds]),
+                    "frame_p99_ms": p50([x["frame_p99_ms"] for x in rounds]),
+                    "achieved_hz": p50([x["achieved_hz"] for x in rounds]),
+                    "missed_deadlines": p50([x["missed_deadlines"] for x in rounds]),
                     "energy_mj": p50([x["energy_mj"] for x in rounds]),
                     "gpu_rail_mj": p50([x["gpu_rail_mj"] for x in rounds]),
                     "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
@@ -159,6 +181,10 @@ def aggregate_run(run_dir):
                     "cpu_p50_ms": p50([x["cpu_p50_ms"] for x in rounds]),
                     "latency_p50_ms": p50([x["latency_p50_ms"] for x in rounds]),
                     "latency_p99_ms": p50([x["latency_p99_ms"] for x in rounds]),
+                    "frame_p50_ms": p50([x["frame_p50_ms"] for x in rounds]),
+                    "frame_p99_ms": p50([x["frame_p99_ms"] for x in rounds]),
+                    "achieved_hz": p50([x["achieved_hz"] for x in rounds]),
+                    "missed_deadlines": p50([x["missed_deadlines"] for x in rounds]),
                     "energy_mj": p50([x["energy_mj"] for x in rounds]),
                     "process_mem_mib": p50([x["process_mem_mib"] for x in rounds]),
                 }
