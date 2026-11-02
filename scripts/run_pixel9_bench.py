@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import subprocess
 import time
 
@@ -21,6 +22,20 @@ def run_adb_cmd(adb, cmd_str: str) -> str:
         check=True, timeout=300,
     )
     return res.stdout
+
+
+def record_cell(path, configuration, journal):
+    with open(path) as stream:
+        report = json.load(stream)
+    if "unsupported" in report:
+        return journal.record(path, configuration)
+    conditions = report["conditions"]
+    quiet = (conditions["screen_state"] in ("off", "asleep", "dozing")
+             and conditions["thermal_status"] == "none")
+    recorded = journal.record(path, configuration, valid=quiet)
+    if not quiet:
+        raise RuntimeError(f"{path}: measurement requires a quiet device; {conditions}")
+    return recorded
 
 
 def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, journal):
@@ -47,16 +62,20 @@ def run_cell(engine: str, scene: str, round_idx: int, is_gpu: bool, options, jou
 
     configuration = {"arguments": cmd.split()[1:-2]}
     if os.path.exists(out_file):
-        journal.record(out_file, configuration)
+        record_cell(out_file, configuration, journal)
         return
 
+    run_adb_cmd(adb, "input keyevent KEYCODE_SLEEP")
+    state = re.search(r"mWakefulness=(\w+)", run_adb_cmd(adb, "dumpsys power"))
+    if state is None or state[1] not in ("Asleep", "Dozing"):
+        raise RuntimeError("Pixel did not enter sleep before measurement")
     t0 = time.time()
     print(f"[RUN] r{round_idx} {scene} / {engine} ({tag}) ...", flush=True)
     run_adb_cmd(adb, cmd)
     subprocess.run(adb + ["pull", remote_json, out_file], capture_output=True, check=True, timeout=60)
     run_adb_cmd(adb, f"rm -f {remote_json}")
 
-    if not journal.record(out_file, configuration):
+    if not record_cell(out_file, configuration, journal):
         return
     with open(out_file) as f:
         data = json.load(f)

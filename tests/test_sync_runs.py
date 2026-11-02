@@ -3,11 +3,13 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
 from sync_runs import RunArchive, command, publish, merge_when_ready
+from run_pixel9_bench import record_cell, run_cell
 
 
 class SyncTests(unittest.TestCase):
@@ -48,8 +50,61 @@ class SyncTests(unittest.TestCase):
                                                           "value": "srgb-encoded"}}))
             journal = RunArchive(root / "journal", self.metadata)
             with self.assertLogs(level="WARNING"):
-                self.assertFalse(journal.record(report, {"frames": 1}))
+                self.assertFalse(record_cell(report, {"frames": 1}, journal))
             self.assertEqual(list(journal.directory.glob("runs/*/*/*.json")), [])
+
+    def test_pixel_resume_preserves_unquiet_reports_as_invalid(self):
+        for screen, thermal in (("awake", "none"), ("dozing", "moderate")):
+            with self.subTest(screen=screen, thermal=thermal), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                report = root / "gpu_r0_map_cherenkov.json"
+                report.write_text(json.dumps(dict(
+                    self.report, conditions={"screen_state": screen, "thermal_status": thermal})))
+                journal = RunArchive(root / "journal", self.metadata)
+                options = SimpleNamespace(device="test-device", output=root)
+                with patch("run_pixel9_bench.run_adb_cmd") as adb:
+                    with self.assertRaisesRegex(RuntimeError, "quiet device"):
+                        run_cell("cherenkov", "map", 0, True, options, journal)
+                    adb.assert_not_called()
+                rows = [json.loads(line) for path in journal.directory.glob("statistics/*.jsonl")
+                        for line in path.read_text().splitlines()]
+                self.assertEqual(len(rows), 1)
+                self.assertFalse(rows[0]["metadata"]["valid"])
+                self.assertIsNone(rows[0]["statistics"])
+                raw = json.loads((journal.directory / rows[0]["raw"]).read_text())
+                self.assertEqual(raw["report"]["samples"], self.report["samples"])
+
+    def test_pixel_sleeps_before_measurement_and_checks_the_result(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            journal = RunArchive(root / "journal", self.metadata)
+            options = SimpleNamespace(device="test-device", output=root)
+
+            def pull(args, **kwargs):
+                self.assertEqual(args[0:4], ["adb", "-s", "test-device", "pull"])
+                Path(args[-1]).write_text(json.dumps(dict(
+                    self.report, conditions={"screen_state": "dozing", "thermal_status": "none"})))
+
+            with patch("run_pixel9_bench.subprocess.run", side_effect=pull):
+                with patch("run_pixel9_bench.run_adb_cmd",
+                           side_effect=["", "mWakefulness=Dozing", "", ""]) as adb:
+                    run_cell("cherenkov", "map", 0, True, options, journal)
+            calls = [call.args[1] for call in adb.call_args_list]
+            self.assertEqual(calls[:2], ["input keyevent KEYCODE_SLEEP", "dumpsys power"])
+            self.assertTrue(calls[2].startswith("/data/local/tmp/cherenkov-bench measure "))
+            rows = [json.loads(line) for path in journal.directory.glob("statistics/*.jsonl")
+                    for line in path.read_text().splitlines()]
+            self.assertEqual(len(rows), 1)
+            self.assertTrue(rows[0]["metadata"]["valid"])
+
+    def test_pixel_does_not_measure_when_sleep_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            options = SimpleNamespace(device="test-device", output=Path(directory))
+            with patch("run_pixel9_bench.run_adb_cmd",
+                       side_effect=["", "mWakefulness=Awake"]) as adb:
+                with self.assertRaisesRegex(RuntimeError, "did not enter sleep"):
+                    run_cell("cherenkov", "map", 0, True, options, None)
+            self.assertEqual(adb.call_count, 2)
 
     def test_publish_uses_topic_branch_and_retry_does_not_append(self):
         with tempfile.TemporaryDirectory() as directory:
