@@ -165,6 +165,7 @@ async function main() {
       {label:'Run minimum',data:points.map(p => p.low),borderWidth:0,pointRadius:0},
       {label:'Run range',data:points.map(p => p.high),borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:color+'20'},
       {label:'Median',data:points.map(p => p.value),borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:4,pointHoverRadius:6,spanGaps:false,tension:0},
+      ...(metric.unit === 'ms' ? [{label:'120 Hz (8.33 ms)',data:points.map(() => 8.333),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}] : []),
     ];
     trend.options.scales.y.beginAtZero = $('zeroAxis').checked;
     trend.options.scales.y.title.text = `${metric.unit} · ${$('zeroAxis').checked ? 'zero baseline' : 'scaled to measured range'}`;
@@ -237,7 +238,10 @@ async function main() {
     entries.sort((a,b) => (finite(a[1][metric]) ? a[1][metric] : Infinity) - (finite(b[1][metric]) ? b[1][metric] : Infinity));
     part('snapshotTitle').textContent = `${scene} · ${selected('snapshotMetric').textContent} · ${metric.endsWith('_ms') ? 'ms' : metric.endsWith('_mib') ? 'MiB' : 'mJ/frame'}`;
     bars.data.labels = entries.map(([engine]) => engine);
-    bars.data.datasets = [{data:entries.map(([,r]) => finite(r[metric]) ? r[metric] : null),backgroundColor:entries.map(([e]) => colors[e] ?? '#777'),barThickness:18}];
+    bars.data.datasets = [
+      {data:entries.map(([,r]) => finite(r[metric]) ? r[metric] : null),backgroundColor:entries.map(([e]) => colors[e] ?? '#777'),barThickness:18},
+      ...(metric.endsWith('_ms') ? [{type:'line',label:'120 Hz (8.33 ms)',data:entries.map(() => 8.333),borderColor:'#888',borderDash:[6,4],borderWidth:1.5,pointRadius:0}] : []),
+    ];
     bars.update();
     part('snapshotNote').textContent = (scene === 'ui-list' ? 'This historical ui-list workload is static; it does not measure scrolling. ' : '') +
       (deviceKey === 'pixel-9-pro' ? 'Energy: selected whole-device GPU, prime-CPU and memory rails; not app-exclusive.' : 'Energy: process-attributed; not GPU-only.') +
