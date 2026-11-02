@@ -1,0 +1,1926 @@
+{
+  "engine": "vello-hybrid",
+  "info": {
+    "name": "vello-hybrid",
+    "engine_crate": "vello_gpu",
+    "crate_version": "0.3.0",
+    "source_rev": "dfe3cfbee79e5ab2d48bb70d91edf33814cbb882",
+    "output_format": "wgpu Rgba8Unorm texture",
+    "precision": "vello_common strip rasterizer in f32; GPU colour pass writes rgba8unorm",
+    "route": "hybrid (cpu strips + gpu colour pass)",
+    "color_note": "peniko brushes (sRGB-tagged); output quantized to rgba8unorm sRGB; readback decoded sRGB→linear P3",
+    "encode_scope": "records `vello_gpu::Scene` calls (set_paint/fill_path/push_layer/glyph_run) against fonts and atlas-resident images prepared once"
+  },
+  "gpu_timing_unavailable": "Vello hybrid does not expose render-pass GPU timestamps",
+  "completion_signal": "wgpu Queue::on_submitted_work_done registered after the frame's last submission, outside the timed submit; the instant is when wgpu ran the callback, which it does only inside a later device poll or queue submission, so it bounds the GPU's completion from above",
+  "wait_for_completion": true,
+  "scene": "text-page",
+  "width": 960,
+  "height": 2142,
+  "native": {
+    "width": 960,
+    "height": 2142,
+    "scale": 0.9375
+  },
+  "prepare_seconds": 0.454723837,
+  "warmup_frames": 30,
+  "samples": [
+    {
+      "encode_seconds": 0.015965576,
+      "submit_seconds": 0.00107723,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022051147,
+      "completed_seconds": 0.022134155,
+      "completion_interval_seconds": null,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015847168,
+      "submit_seconds": 0.000939697,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021744304,
+      "completed_seconds": 0.043946859,
+      "completion_interval_seconds": 0.021812704,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015960123,
+      "submit_seconds": 0.00099703,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021853312,
+      "completed_seconds": 0.065865926,
+      "completion_interval_seconds": 0.021919067,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015449016,
+      "submit_seconds": 0.00092692,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021335897,
+      "completed_seconds": 0.087265178,
+      "completion_interval_seconds": 0.021399252,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016106364,
+      "submit_seconds": 0.001017415,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02189095,
+      "completed_seconds": 0.109228231,
+      "completion_interval_seconds": 0.021963053,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016111247,
+      "submit_seconds": 0.000973104,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022038778,
+      "completed_seconds": 0.131332601,
+      "completion_interval_seconds": 0.02210437,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015847901,
+      "submit_seconds": 0.00092631,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021772665,
+      "completed_seconds": 0.153166789,
+      "completion_interval_seconds": 0.021834188,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01593807,
+      "submit_seconds": 0.000989665,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022015625,
+      "completed_seconds": 0.175304647,
+      "completion_interval_seconds": 0.022137858,
+      "cpu_start": 6,
+      "cpu_end": 1,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.022332357,
+      "submit_seconds": 0.000836833,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.027718791,
+      "completed_seconds": 0.203132975,
+      "completion_interval_seconds": 0.027828328,
+      "cpu_start": 1,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015661987,
+      "submit_seconds": 0.000972413,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021689168,
+      "completed_seconds": 0.225010091,
+      "completion_interval_seconds": 0.021877116,
+      "cpu_start": 4,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016165608,
+      "submit_seconds": 0.001034017,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022192749,
+      "completed_seconds": 0.247289714,
+      "completion_interval_seconds": 0.022279623,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015422567,
+      "submit_seconds": 0.00093514,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021283366,
+      "completed_seconds": 0.268653768,
+      "completion_interval_seconds": 0.021364054,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016029541,
+      "submit_seconds": 0.001098959,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022045655,
+      "completed_seconds": 0.290759969,
+      "completion_interval_seconds": 0.022106201,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015996256,
+      "submit_seconds": 0.001011149,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02189095,
+      "completed_seconds": 0.312715495,
+      "completion_interval_seconds": 0.021955526,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015621135,
+      "submit_seconds": 0.000979288,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02158256,
+      "completed_seconds": 0.334360352,
+      "completion_interval_seconds": 0.021644857,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015812296,
+      "submit_seconds": 0.0009941,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021680867,
+      "completed_seconds": 0.35610669,
+      "completion_interval_seconds": 0.021746338,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015639079,
+      "submit_seconds": 0.000909831,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021580607,
+      "completed_seconds": 0.377751587,
+      "completion_interval_seconds": 0.021644897,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015876221,
+      "submit_seconds": 0.000982584,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021828654,
+      "completed_seconds": 0.39964502,
+      "completion_interval_seconds": 0.021893433,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015723796,
+      "submit_seconds": 0.000907715,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021978435,
+      "completed_seconds": 0.421711141,
+      "completion_interval_seconds": 0.022066121,
+      "cpu_start": 5,
+      "cpu_end": 1,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.021630656,
+      "submit_seconds": 0.000891398,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.027279745,
+      "completed_seconds": 0.449109782,
+      "completion_interval_seconds": 0.027398641,
+      "cpu_start": 1,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015389974,
+      "submit_seconds": 0.001134644,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021980144,
+      "completed_seconds": 0.471171428,
+      "completion_interval_seconds": 0.022061646,
+      "cpu_start": 4,
+      "cpu_end": 6,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016356201,
+      "submit_seconds": 0.000966553,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022242269,
+      "completed_seconds": 0.493491984,
+      "completion_interval_seconds": 0.022320556,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015977986,
+      "submit_seconds": 0.000866699,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021898518,
+      "completed_seconds": 0.51547819,
+      "completion_interval_seconds": 0.021986206,
+      "cpu_start": 6,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016326213,
+      "submit_seconds": 0.000998901,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022269491,
+      "completed_seconds": 0.53780953,
+      "completion_interval_seconds": 0.02233134,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015880209,
+      "submit_seconds": 0.000924031,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02178121,
+      "completed_seconds": 0.559652222,
+      "completion_interval_seconds": 0.021842692,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015902751,
+      "submit_seconds": 0.000914021,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022013997,
+      "completed_seconds": 0.581784628,
+      "completion_interval_seconds": 0.022132406,
+      "cpu_start": 4,
+      "cpu_end": 1,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.021544637,
+      "submit_seconds": 0.000986735,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.027159302,
+      "completed_seconds": 0.609023275,
+      "completion_interval_seconds": 0.027238647,
+      "cpu_start": 1,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.01498234,
+      "submit_seconds": 0.00138676,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021353068,
+      "completed_seconds": 0.630437989,
+      "completion_interval_seconds": 0.021414714,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015867432,
+      "submit_seconds": 0.000934529,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021715576,
+      "completed_seconds": 0.652215292,
+      "completion_interval_seconds": 0.021777303,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015364136,
+      "submit_seconds": 0.000911621,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021289469,
+      "completed_seconds": 0.673564616,
+      "completion_interval_seconds": 0.021349324,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016287272,
+      "submit_seconds": 0.000947469,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022206868,
+      "completed_seconds": 0.695828695,
+      "completion_interval_seconds": 0.022264079,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015709432,
+      "submit_seconds": 0.000916056,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021616455,
+      "completed_seconds": 0.717507894,
+      "completion_interval_seconds": 0.021679199,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015469361,
+      "submit_seconds": 0.000921427,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021349569,
+      "completed_seconds": 0.738920004,
+      "completion_interval_seconds": 0.02141211,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015864584,
+      "submit_seconds": 0.000988281,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.0221073,
+      "completed_seconds": 0.761125814,
+      "completion_interval_seconds": 0.02220581,
+      "cpu_start": 5,
+      "cpu_end": 3,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.021190267,
+      "submit_seconds": 0.000827596,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.027365316,
+      "completed_seconds": 0.788574463,
+      "completion_interval_seconds": 0.027448649,
+      "cpu_start": 3,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016393636,
+      "submit_seconds": 0.001010702,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02324703,
+      "completed_seconds": 0.811897706,
+      "completion_interval_seconds": 0.023323243,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016707154,
+      "submit_seconds": 0.001188517,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.023046916,
+      "completed_seconds": 0.835027059,
+      "completion_interval_seconds": 0.023129353,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016329264,
+      "submit_seconds": 0.001039795,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022366414,
+      "completed_seconds": 0.85747522,
+      "completion_interval_seconds": 0.022448161,
+      "cpu_start": 4,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016546142,
+      "submit_seconds": 0.001053142,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022543701,
+      "completed_seconds": 0.880084066,
+      "completion_interval_seconds": 0.022608846,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016401124,
+      "submit_seconds": 0.001159505,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022516236,
+      "completed_seconds": 0.902667359,
+      "completion_interval_seconds": 0.022583293,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01598881,
+      "submit_seconds": 0.000907715,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02178483,
+      "completed_seconds": 0.92451709,
+      "completion_interval_seconds": 0.021849731,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016026164,
+      "submit_seconds": 0.001130737,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022829183,
+      "completed_seconds": 0.947440267,
+      "completion_interval_seconds": 0.022923177,
+      "cpu_start": 5,
+      "cpu_end": 1,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.021560913,
+      "submit_seconds": 0.00091097,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.027152385,
+      "completed_seconds": 0.974669638,
+      "completion_interval_seconds": 0.027229371,
+      "cpu_start": 1,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015288941,
+      "submit_seconds": 0.00093986,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021153606,
+      "completed_seconds": 0.995903687,
+      "completion_interval_seconds": 0.021234049,
+      "cpu_start": 4,
+      "cpu_end": 6,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016184367,
+      "submit_seconds": 0.001339234,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022618734,
+      "completed_seconds": 1.018599976,
+      "completion_interval_seconds": 0.022696289,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016331665,
+      "submit_seconds": 0.000987142,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022312011,
+      "completed_seconds": 1.040972372,
+      "completion_interval_seconds": 0.022372396,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015850383,
+      "submit_seconds": 0.000986084,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.0218066,
+      "completed_seconds": 1.062848918,
+      "completion_interval_seconds": 0.021876546,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01598055,
+      "submit_seconds": 0.000947225,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02186796,
+      "completed_seconds": 1.084810425,
+      "completion_interval_seconds": 0.021961507,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015713175,
+      "submit_seconds": 0.001014201,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02165686,
+      "completed_seconds": 1.106580689,
+      "completion_interval_seconds": 0.021770264,
+      "cpu_start": 6,
+      "cpu_end": 2,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.01858667,
+      "submit_seconds": 0.001019409,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.023891561,
+      "completed_seconds": 1.130580526,
+      "completion_interval_seconds": 0.023999837,
+      "cpu_start": 2,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016702556,
+      "submit_seconds": 0.001255167,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022997274,
+      "completed_seconds": 1.153691814,
+      "completion_interval_seconds": 0.023111288,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015759521,
+      "submit_seconds": 0.000939657,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021691772,
+      "completed_seconds": 1.175472209,
+      "completion_interval_seconds": 0.021780395,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015787679,
+      "submit_seconds": 0.000920817,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021635254,
+      "completed_seconds": 1.197180176,
+      "completion_interval_seconds": 0.021707967,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015552572,
+      "submit_seconds": 0.000960245,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021491374,
+      "completed_seconds": 1.218732219,
+      "completion_interval_seconds": 0.021552043,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015993001,
+      "submit_seconds": 0.000901204,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021841837,
+      "completed_seconds": 1.240655884,
+      "completion_interval_seconds": 0.021923665,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016145182,
+      "submit_seconds": 0.000973673,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021972697,
+      "completed_seconds": 1.2627049160000001,
+      "completion_interval_seconds": 0.022049032,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015741903,
+      "submit_seconds": 0.000911987,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021605266,
+      "completed_seconds": 1.2843928230000001,
+      "completion_interval_seconds": 0.021687907,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015768921,
+      "submit_seconds": 0.001107422,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021783814,
+      "completed_seconds": 1.306240805,
+      "completion_interval_seconds": 0.021847982,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015761149,
+      "submit_seconds": 0.000909139,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021450195,
+      "completed_seconds": 1.327786011,
+      "completion_interval_seconds": 0.021545206,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015744385,
+      "submit_seconds": 0.000906779,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021567627,
+      "completed_seconds": 1.349410442,
+      "completion_interval_seconds": 0.021624431,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015864909,
+      "submit_seconds": 0.000951863,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021800374,
+      "completed_seconds": 1.371277304,
+      "completion_interval_seconds": 0.021866862,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015922322,
+      "submit_seconds": 0.000990519,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021818156,
+      "completed_seconds": 1.393167196,
+      "completion_interval_seconds": 0.021889892,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016137655,
+      "submit_seconds": 0.001153849,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022218262,
+      "completed_seconds": 1.415463136,
+      "completion_interval_seconds": 0.02229594,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016443767,
+      "submit_seconds": 0.001541626,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.023020752,
+      "completed_seconds": 1.438564413,
+      "completion_interval_seconds": 0.023101277,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015924927,
+      "submit_seconds": 0.001094198,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022058187,
+      "completed_seconds": 1.460693116,
+      "completion_interval_seconds": 0.022128703,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015858969,
+      "submit_seconds": 0.001026936,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021901368,
+      "completed_seconds": 1.482657878,
+      "completion_interval_seconds": 0.021964762,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015640829,
+      "submit_seconds": 0.000917521,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021541382,
+      "completed_seconds": 1.504265707,
+      "completion_interval_seconds": 0.021607829,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015681315,
+      "submit_seconds": 0.001035685,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021588053,
+      "completed_seconds": 1.5259182949999999,
+      "completion_interval_seconds": 0.021652588,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015601766,
+      "submit_seconds": 0.0011816,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021668173,
+      "completed_seconds": 1.547659791,
+      "completion_interval_seconds": 0.021741496,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.0157382,
+      "submit_seconds": 0.001661621,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022494059,
+      "completed_seconds": 1.57023401,
+      "completion_interval_seconds": 0.022574219,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016067831,
+      "submit_seconds": 0.001521484,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.02328479,
+      "completed_seconds": 1.593630331,
+      "completion_interval_seconds": 0.023396321,
+      "cpu_start": 5,
+      "cpu_end": 6,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.017024699,
+      "submit_seconds": 0.001513712,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.024062703,
+      "completed_seconds": 1.6177975679999999,
+      "completion_interval_seconds": 0.024167237,
+      "cpu_start": 6,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016542195,
+      "submit_seconds": 0.001510702,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022734578,
+      "completed_seconds": 1.640663494,
+      "completion_interval_seconds": 0.022865926,
+      "cpu_start": 5,
+      "cpu_end": 6,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016364664,
+      "submit_seconds": 0.001106893,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021945516,
+      "completed_seconds": 1.6627292900000001,
+      "completion_interval_seconds": 0.022065796,
+      "cpu_start": 6,
+      "cpu_end": 3,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016723307,
+      "submit_seconds": 0.001069865,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022326904,
+      "completed_seconds": 1.685163453,
+      "completion_interval_seconds": 0.022434163,
+      "cpu_start": 3,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015116374,
+      "submit_seconds": 0.001379923,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022045369,
+      "completed_seconds": 1.707299521,
+      "completion_interval_seconds": 0.022136068,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015824178,
+      "submit_seconds": 0.001153523,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022361775,
+      "completed_seconds": 1.729760865,
+      "completion_interval_seconds": 0.022461344,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016197999,
+      "submit_seconds": 0.001139038,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022283855,
+      "completed_seconds": 1.752121298,
+      "completion_interval_seconds": 0.022360433,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015640828,
+      "submit_seconds": 0.000965129,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021531046,
+      "completed_seconds": 1.773721152,
+      "completion_interval_seconds": 0.021599854,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016138591,
+      "submit_seconds": 0.00094108,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022242961,
+      "completed_seconds": 1.796038697,
+      "completion_interval_seconds": 0.022317545,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01676827,
+      "submit_seconds": 0.001164103,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022900512,
+      "completed_seconds": 1.8190080979999999,
+      "completion_interval_seconds": 0.022969401,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.017295532,
+      "submit_seconds": 0.00121342,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.023368408,
+      "completed_seconds": 1.842465821,
+      "completion_interval_seconds": 0.023457723,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.0160861,
+      "submit_seconds": 0.001019979,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021911906,
+      "completed_seconds": 1.864443238,
+      "completion_interval_seconds": 0.021977417,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016687419,
+      "submit_seconds": 0.001722331,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.023344808,
+      "completed_seconds": 1.887863974,
+      "completion_interval_seconds": 0.023420736,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016068807,
+      "submit_seconds": 0.001524821,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022576172,
+      "completed_seconds": 1.9105244959999998,
+      "completion_interval_seconds": 0.022660522,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015990071,
+      "submit_seconds": 0.001223389,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022161946,
+      "completed_seconds": 1.932763063,
+      "completion_interval_seconds": 0.022238567,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015857382,
+      "submit_seconds": 0.001204996,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022110352,
+      "completed_seconds": 1.954950969,
+      "completion_interval_seconds": 0.022187906,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015849324,
+      "submit_seconds": 0.000955974,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021838664,
+      "completed_seconds": 1.976949912,
+      "completion_interval_seconds": 0.021998943,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015780517,
+      "submit_seconds": 0.001121704,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021907633,
+      "completed_seconds": 1.998996949,
+      "completion_interval_seconds": 0.022047037,
+      "cpu_start": 4,
+      "cpu_end": 0,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.019024089,
+      "submit_seconds": 0.000991862,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.024999756,
+      "completed_seconds": 2.024090415,
+      "completion_interval_seconds": 0.025093466,
+      "cpu_start": 0,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015421957,
+      "submit_seconds": 0.000929321,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021437012,
+      "completed_seconds": 2.045596884,
+      "completion_interval_seconds": 0.021506469,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015941325,
+      "submit_seconds": 0.001354614,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022491699,
+      "completed_seconds": 2.068232667,
+      "completion_interval_seconds": 0.022635783,
+      "cpu_start": 4,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.01391805,
+      "submit_seconds": 0.001725505,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.020765584,
+      "completed_seconds": 2.089083863,
+      "completion_interval_seconds": 0.020851196,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.013686604,
+      "submit_seconds": 0.001151327,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.020143554,
+      "completed_seconds": 2.109330323,
+      "completion_interval_seconds": 0.02024646,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015457357,
+      "submit_seconds": 0.001149373,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021649129,
+      "completed_seconds": 2.131066407,
+      "completion_interval_seconds": 0.021736084,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.014952922,
+      "submit_seconds": 0.000945394,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.020814535,
+      "completed_seconds": 2.151965821,
+      "completion_interval_seconds": 0.020899414,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015279012,
+      "submit_seconds": 0.00094633,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021237874,
+      "completed_seconds": 2.173273642,
+      "completion_interval_seconds": 0.021307821,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015897054,
+      "submit_seconds": 0.000982584,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021932983,
+      "completed_seconds": 2.195286134,
+      "completion_interval_seconds": 0.022012492,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016010173,
+      "submit_seconds": 0.001057128,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021951538,
+      "completed_seconds": 2.217309246,
+      "completion_interval_seconds": 0.022023112,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015506877,
+      "submit_seconds": 0.000967407,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021611084,
+      "completed_seconds": 2.239022177,
+      "completion_interval_seconds": 0.021712931,
+      "cpu_start": 5,
+      "cpu_end": 6,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016781169,
+      "submit_seconds": 0.001152954,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022879517,
+      "completed_seconds": 2.26197164,
+      "completion_interval_seconds": 0.022949463,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016205241,
+      "submit_seconds": 0.000934774,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022086222,
+      "completed_seconds": 2.284128663,
+      "completion_interval_seconds": 0.022157023,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015993042,
+      "submit_seconds": 0.001073812,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022128458,
+      "completed_seconds": 2.30632479,
+      "completion_interval_seconds": 0.022196127,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01598759,
+      "submit_seconds": 0.000980957,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022237061,
+      "completed_seconds": 2.328656821,
+      "completion_interval_seconds": 0.022332031,
+      "cpu_start": 6,
+      "cpu_end": 1,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.021745198,
+      "submit_seconds": 0.000953329,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.027342895,
+      "completed_seconds": 2.35607719,
+      "completion_interval_seconds": 0.027420369,
+      "cpu_start": 1,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015889323,
+      "submit_seconds": 0.001011801,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021763469,
+      "completed_seconds": 2.3779125580000002,
+      "completion_interval_seconds": 0.021835368,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015623047,
+      "submit_seconds": 0.000924804,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021577107,
+      "completed_seconds": 2.399577435,
+      "completion_interval_seconds": 0.021664877,
+      "cpu_start": 4,
+      "cpu_end": 6,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016228597,
+      "submit_seconds": 0.001166138,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021995809,
+      "completed_seconds": 2.421638348,
+      "completion_interval_seconds": 0.022060913,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015897745,
+      "submit_seconds": 0.000963257,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021851603,
+      "completed_seconds": 2.443591717,
+      "completion_interval_seconds": 0.021953369,
+      "cpu_start": 6,
+      "cpu_end": 6,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016123739,
+      "submit_seconds": 0.000999024,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022069581,
+      "completed_seconds": 2.465754803,
+      "completion_interval_seconds": 0.022163086,
+      "cpu_start": 6,
+      "cpu_end": 1,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.020162924,
+      "submit_seconds": 0.000979207,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.025778809,
+      "completed_seconds": 2.4916259370000002,
+      "completion_interval_seconds": 0.025871134,
+      "cpu_start": 1,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.015914469,
+      "submit_seconds": 0.001096151,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021952107,
+      "completed_seconds": 2.513652833,
+      "completion_interval_seconds": 0.022026896,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01540804,
+      "submit_seconds": 0.000922445,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021263102,
+      "completed_seconds": 2.534981569,
+      "completion_interval_seconds": 0.021328736,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.015842936,
+      "submit_seconds": 0.000922729,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.021895141,
+      "completed_seconds": 2.556945599,
+      "completion_interval_seconds": 0.02196403,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.01600826,
+      "submit_seconds": 0.00098999,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022366781,
+      "completed_seconds": 2.579421754,
+      "completion_interval_seconds": 0.022476155,
+      "cpu_start": 5,
+      "cpu_end": 2,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.020239014,
+      "submit_seconds": 0.001274536,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.026289673,
+      "completed_seconds": 2.6057842620000002,
+      "completion_interval_seconds": 0.026362508,
+      "cpu_start": 2,
+      "cpu_end": 4,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016361328,
+      "submit_seconds": 0.00082198,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022134724,
+      "completed_seconds": 2.627994915,
+      "completion_interval_seconds": 0.022210653,
+      "cpu_start": 4,
+      "cpu_end": 4,
+      "migrated": false
+    },
+    {
+      "encode_seconds": 0.016069255,
+      "submit_seconds": 0.001075928,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022114095,
+      "completed_seconds": 2.650207806,
+      "completion_interval_seconds": 0.022212891,
+      "cpu_start": 4,
+      "cpu_end": 2,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.018931396,
+      "submit_seconds": 0.00091093,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.024730143,
+      "completed_seconds": 2.675030641,
+      "completion_interval_seconds": 0.024822835,
+      "cpu_start": 2,
+      "cpu_end": 5,
+      "migrated": true
+    },
+    {
+      "encode_seconds": 0.016356893,
+      "submit_seconds": 0.001239054,
+      "gpu_wait_seconds": 0.0,
+      "gpu_seconds": null,
+      "latency_seconds": 0.022625122,
+      "completed_seconds": 2.6977236749999998,
+      "completion_interval_seconds": 0.022693034,
+      "cpu_start": 5,
+      "cpu_end": 5,
+      "migrated": false
+    }
+  ],
+  "placement": {
+    "requested": null,
+    "controlled": false,
+    "heterogeneous": true,
+    "prepare_cpu": 5,
+    "cpus": {
+      "0": {
+        "count": 2,
+        "max_freq_khz": 1950000
+      },
+      "1": {
+        "count": 12,
+        "max_freq_khz": 1950000
+      },
+      "2": {
+        "count": 6,
+        "max_freq_khz": 1950000
+      },
+      "3": {
+        "count": 4,
+        "max_freq_khz": 1950000
+      },
+      "4": {
+        "count": 58,
+        "max_freq_khz": 2600000
+      },
+      "5": {
+        "count": 112,
+        "max_freq_khz": 2600000
+      },
+      "6": {
+        "count": 47,
+        "max_freq_khz": 2600000
+      }
+    },
+    "migrated": 35
+  },
+  "percentiles": {
+    "encode_seconds": [
+      0.015960123,
+      0.017024699,
+      0.021745198
+    ],
+    "submit_seconds": [
+      0.00098999,
+      0.001274536,
+      0.001722331
+    ],
+    "gpu_seconds": null,
+    "completion_interval_seconds": [
+      0.022061646,
+      0.023999837,
+      0.027448649
+    ]
+  },
+  "pacing": {
+    "requested_hz": 120.0,
+    "achieved_hz": 44.47253733449589,
+    "missed_deadlines": 119,
+    "window_seconds": 2.698294435
+  },
+  "energy": {
+    "source": "odpm",
+    "window_seconds": 2.706,
+    "rails": {
+      "L21S_VDD2L_MEM": {
+        "subsystem": "DDR",
+        "joules": 0.01553,
+        "joules_per_frame": 0.00012941666666666668,
+        "watts": 0.00573909830007391
+      },
+      "L22S_UDFPS": {
+        "subsystem": "UDFPS",
+        "joules": 0.002249,
+        "joules_per_frame": 0.000018741666666666667,
+        "watts": 0.0008311160384331116
+      },
+      "L2S_PLL_MIPI_UFS": {
+        "subsystem": "PLL",
+        "joules": 0.046241,
+        "joules_per_frame": 0.0003853416666666666,
+        "watts": 0.01708832224685883
+      },
+      "S1M_VDD_MIF": {
+        "subsystem": "MIF",
+        "joules": 0.077885,
+        "joules_per_frame": 0.0006490416666666666,
+        "watts": 0.028782335550628233
+      },
+      "S1S_VDD_CAM": {
+        "subsystem": "Multimedia",
+        "joules": 0.01059,
+        "joules_per_frame": 0.00008825,
+        "watts": 0.003913525498891353
+      },
+      "S2M_VDD_CPUCL1": {
+        "subsystem": "CPU(MID)",
+        "joules": 0.182265,
+        "joules_per_frame": 0.001518875,
+        "watts": 0.0673558758314856
+      },
+      "S2S_VDD_G3D": {
+        "subsystem": "GPU",
+        "joules": 0.080774,
+        "joules_per_frame": 0.0006731166666666666,
+        "watts": 0.029849963045084995
+      },
+      "S3M_VDD_CPUCL2": {
+        "subsystem": "CPU(BIG)",
+        "joules": 0.00541,
+        "joules_per_frame": 0.00004508333333333333,
+        "watts": 0.001999260901699926
+      },
+      "S3S_LLDO1": {
+        "subsystem": "LDO",
+        "joules": 0.106177,
+        "joules_per_frame": 0.0008848083333333333,
+        "watts": 0.03923762010347376
+      },
+      "S4M_VDD_CPUCL0": {
+        "subsystem": "CPU(LITTLE)",
+        "joules": 0.261341,
+        "joules_per_frame": 0.0021778416666666666,
+        "watts": 0.09657834441980784
+      },
+      "S4S_VDD2H_MEM": {
+        "subsystem": "DDR",
+        "joules": 0.078269,
+        "joules_per_frame": 0.0006522416666666667,
+        "watts": 0.028924242424242425
+      },
+      "S5M_VDD_INT": {
+        "subsystem": "INT",
+        "joules": 0.055719,
+        "joules_per_frame": 0.00046432499999999997,
+        "watts": 0.02059090909090909
+      },
+      "S5S_VDDQ_MEM": {
+        "subsystem": "DDR",
+        "joules": 0.004453,
+        "joules_per_frame": 0.00003710833333333334,
+        "watts": 0.0016456023651145605
+      },
+      "S6M_LLDO1": {
+        "subsystem": "LDO",
+        "joules": 0.345527,
+        "joules_per_frame": 0.0028793916666666666,
+        "watts": 0.1276892091648189
+      },
+      "S7M_VDD_TPU": {
+        "subsystem": "TPU",
+        "joules": 0.0,
+        "joules_per_frame": 0.0,
+        "watts": 0.0
+      },
+      "S8M_LLDO2": {
+        "subsystem": "LDO",
+        "joules": 0.200847,
+        "joules_per_frame": 0.001673725,
+        "watts": 0.07422283813747228
+      },
+      "S9M_VDD_CPUCL1_M": {
+        "subsystem": "CPU(MID)",
+        "joules": 0.031461,
+        "joules_per_frame": 0.000262175,
+        "watts": 0.011626385809312639
+      },
+      "S9S_VDD_AOC": {
+        "subsystem": "AOC",
+        "joules": 0.016844,
+        "joules_per_frame": 0.00014036666666666667,
+        "watts": 0.006224685883222469
+      },
+      "VSYS_PWR_CAMERA": {
+        "subsystem": "Camera",
+        "joules": 0.016465,
+        "joules_per_frame": 0.00013720833333333334,
+        "watts": 0.0060846267553584625
+      },
+      "VSYS_PWR_DISPLAY": {
+        "subsystem": "Display",
+        "joules": 0.18712,
+        "joules_per_frame": 0.0015593333333333334,
+        "watts": 0.069150036954915
+      },
+      "VSYS_PWR_MMWAVE": {
+        "subsystem": "Cellular",
+        "joules": 0.000221,
+        "joules_per_frame": 1.8416666666666667e-6,
+        "watts": 0.00008167036215816704
+      },
+      "VSYS_PWR_MODEM": {
+        "subsystem": "MODEM",
+        "joules": 0.279656,
+        "joules_per_frame": 0.002330466666666667,
+        "watts": 0.10334663710273467
+      },
+      "VSYS_PWR_RFFE": {
+        "subsystem": "Cellular",
+        "joules": 0.009908,
+        "joules_per_frame": 0.00008256666666666666,
+        "watts": 0.0036614929785661493
+      },
+      "VSYS_PWR_WLAN_BT": {
+        "subsystem": "WLAN-BT",
+        "joules": 0.224885,
+        "joules_per_frame": 0.0018740416666666667,
+        "watts": 0.08310606060606061
+      }
+    },
+    "total_joules": 2.2398369999999996,
+    "joules_per_frame": 0.01866530833333333,
+    "watts": 0.8277298595713228
+  },
+  "conditions": {
+    "thermal_status": "none",
+    "thermal_celsius": 34.0,
+    "screen_state": "dozing",
+    "screen_brightness": 15
+  },
+  "gpu_clock": {
+    "residency": [
+      {
+        "khz": 940000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 890000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 850000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 807000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 723000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 649000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 580000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 521000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 467000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 419000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 376000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 337000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 302000,
+        "milliseconds": 0
+      },
+      {
+        "khz": 150000,
+        "milliseconds": 2699
+      }
+    ]
+  },
+  "counters": {
+    "draw_commands": 42,
+    "layers": 2,
+    "bytes_uploaded": 0,
+    "dispatches": null,
+    "passes": null,
+    "memory_gpu_bytes": null,
+    "memory_cpu_bytes": null,
+    "memory_backdrop_capture_bytes": null,
+    "memory_backdrop_capture_format": null,
+    "memory_filter_target_bytes": null,
+    "memory_filter_image_bytes": null
+  },
+  "memory": {
+    "idle": {
+      "engine": {
+        "unavailable": "Vello hybrid does not expose engine memory"
+      },
+      "wgpu_allocator": {
+        "measured": {
+          "allocated_bytes": 524816,
+          "reserved_bytes": 67108864,
+          "allocations": 4,
+          "blocks": 1
+        }
+      },
+      "skia_budgeted": {
+        "unavailable": "Vello hybrid has no Skia budget"
+      },
+      "process": {
+        "platform": "android",
+        "pss_bytes": {
+          "measured": 25954304
+        },
+        "gpu_mem_bytes": {
+          "measured": 70111232
+        }
+      }
+    },
+    "preparation": {
+      "engine": {
+        "unavailable": "Vello hybrid does not expose engine memory"
+      },
+      "wgpu_allocator": {
+        "measured": {
+          "allocated_bytes": 19066944,
+          "reserved_bytes": 67108864,
+          "allocations": 16,
+          "blocks": 1
+        }
+      },
+      "skia_budgeted": {
+        "unavailable": "Vello hybrid has no Skia budget"
+      },
+      "process": {
+        "platform": "android",
+        "pss_bytes": {
+          "measured": 36875264
+        },
+        "gpu_mem_bytes": {
+          "measured": 70193152
+        }
+      }
+    },
+    "warmup_peak": {
+      "engine": {
+        "unavailable": "Vello hybrid does not expose engine memory"
+      },
+      "wgpu_allocator": {
+        "measured": {
+          "allocated_bytes": 19229712,
+          "reserved_bytes": 67108864,
+          "allocations": 13,
+          "blocks": 1
+        }
+      },
+      "skia_budgeted": {
+        "unavailable": "Vello hybrid has no Skia budget"
+      },
+      "process": {
+        "platform": "android",
+        "pss_bytes": {
+          "measured": 41487360
+        },
+        "gpu_mem_bytes": {
+          "unavailable": "dumpsys gpu --gpumem sampled at idle, prepare and steady only"
+        }
+      }
+    },
+    "steady": {
+      "engine": {
+        "unavailable": "Vello hybrid does not expose engine memory"
+      },
+      "wgpu_allocator": {
+        "measured": {
+          "allocated_bytes": 19229712,
+          "reserved_bytes": 67108864,
+          "allocations": 13,
+          "blocks": 1
+        }
+      },
+      "skia_budgeted": {
+        "unavailable": "Vello hybrid has no Skia budget"
+      },
+      "process": {
+        "platform": "android",
+        "pss_bytes": {
+          "measured": 41532416
+        },
+        "gpu_mem_bytes": {
+          "measured": 73433088
+        }
+      }
+    },
+    "post_retire": {
+      "engine": {
+        "unavailable": "Vello hybrid does not expose engine memory"
+      },
+      "wgpu_allocator": {
+        "measured": {
+          "allocated_bytes": 19229712,
+          "reserved_bytes": 67108864,
+          "allocations": 13,
+          "blocks": 1
+        }
+      },
+      "skia_budgeted": {
+        "unavailable": "Vello hybrid has no Skia budget"
+      },
+      "process": {
+        "platform": "android",
+        "pss_bytes": {
+          "measured": 41602048
+        },
+        "gpu_mem_bytes": {
+          "measured": 73433088
+        }
+      }
+    },
+    "peak": {
+      "engine": {
+        "unavailable": "Vello hybrid does not expose engine memory"
+      },
+      "wgpu_allocator": {
+        "measured": {
+          "allocated_bytes": 19229712,
+          "reserved_bytes": 67108864,
+          "allocations": 16,
+          "blocks": 1
+        }
+      },
+      "skia_budgeted": {
+        "unavailable": "Vello hybrid has no Skia budget"
+      },
+      "process": {
+        "platform": "android",
+        "pss_bytes": {
+          "measured": 41532416
+        },
+        "gpu_mem_bytes": {
+          "measured": 73433088
+        }
+      }
+    },
+    "samples": 32
+  },
+  "device": {
+    "adapter": "Mali-G715",
+    "backend": "Vulkan",
+    "driver": "Mali-G715",
+    "driver_info": "v1.r54p2-00eac0.7001668a7a05889fc53765c682b36a3f",
+    "vendor": 5045,
+    "device": 3097624576,
+    "target_format": "Rgba8Unorm",
+    "cpu": null,
+    "thermal_celsius": 34.0
+  }
+}
